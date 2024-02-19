@@ -1,0 +1,14 @@
+{
+  "commands": [
+    {
+      "name": "init",
+      "overwrite": "false",
+      "files": [
+        {
+          "path": "{{.Project}}/{{.Project}}.go"
+          "template": "main.go",
+        },
+      ]
+    }
+  ]
+}

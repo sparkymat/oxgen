@@ -2,7 +2,6 @@ package generator
 
 import (
 	"context"
-	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -29,7 +28,7 @@ func processSetupTemplateFile(ctx context.Context, s *Service, projectName strin
 			return nil
 		}
 
-		_, err = os.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
@@ -39,7 +38,11 @@ func processSetupTemplateFile(ctx context.Context, s *Service, projectName strin
 
 		destinationPath := s.ReplacePlaceholders(ctx, destinationPathTemplate, projectName)
 
-		fmt.Printf("destinationPath: %s\n", destinationPath)
+		destinationContents := s.ReplacePlaceholders(ctx, string(content), projectName)
+
+		if err := os.WriteFile(destinationPath, []byte(destinationContents), 0644); err != nil {
+			return err
+		}
 
 		return nil
 	}

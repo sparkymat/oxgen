@@ -1,0 +1,51 @@
+import (
+	"log/slog"
+
+	"__REPO__/internal"
+	"__REPO__/internal/config"
+	"__REPO__/internal/database"
+	"__REPO__/internal/dbx"
+	"__REPO__/internal/route"
+	"__REPO__/internal/service/people"
+	"__REPO__/internal/service/user"
+	"github.com/hibiken/asynq"
+	"github.com/labstack/echo/v4"
+)
+
+//go:generate go run github.com/valyala/quicktemplate/qtc -dir=internal/view
+
+func main() {
+	cfg, err := config.New()
+	if err != nil {
+		panic(err)
+	}
+
+	dbDriver, err := database.New(cfg.DatabaseURL())
+	if err != nil {
+		slog.Error(err.Error())
+		panic(err)
+	}
+
+	if err = dbDriver.AutoMigrate(); err != nil {
+		slog.Error(err.Error())
+		panic(err)
+	}
+
+	db := dbx.New(dbDriver.DB())
+
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: cfg.RedisURL()})
+	defer asynqClient.Close()
+
+	userService := user.New(db)
+
+	peopleService := people.New(cfg.StorageFolder(), db)
+
+	services := internal.Services{
+		User:   userService,
+	}
+
+	e := echo.New()
+	route.Setup(e, cfg, services)
+
+	e.Logger.Panic(e.Start(":8080"))
+}

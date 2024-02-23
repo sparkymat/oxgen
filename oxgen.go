@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/alecthomas/kong"
+	"github.com/sparkymat/oxgen/internal/generator"
 )
 
 func main() {
@@ -24,14 +25,15 @@ func main() {
 }
 
 type OxgenApp struct {
-	Init InitCommand `cmd:"" help:"Initialize a new project"`
+	Setup SetupCommand `cmd:"" help:"Initialize a new project"`
 }
 
-type InitCommand struct {
-	Force bool `help:"Forcibly initialize even if the folder is not empty."`
+type SetupCommand struct {
+	Name  string `required:"" help:"Name of the project"`
+	Force bool   `help:"Forcibly initialize even if the folder is not empty."`
 }
 
-func (i *InitCommand) Run(ctx *kong.Context) error {
-	fmt.Println("I won't do that")
-	return nil
+func (i *SetupCommand) Run(ctx *kong.Context) error {
+	s := generator.New()
+	return s.Setup(context.Background(), i.Name, i.Force)
 }

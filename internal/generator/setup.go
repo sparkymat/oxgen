@@ -2,6 +2,7 @@ package generator
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path"
@@ -9,8 +10,8 @@ import (
 	"strings"
 )
 
-func (s *Service) Setup(ctx context.Context, projectName string, _ bool) error {
-	err := filepath.WalkDir(path.Join("templates", "setup"), processSetupTemplateFile(ctx, s, projectName))
+func (s *Service) Setup(ctx context.Context, projectName string, templatesFolder string, _ bool) error {
+	err := filepath.WalkDir(path.Join(templatesFolder, "setup"), processSetupTemplateFile(ctx, s, projectName, templatesFolder))
 	if err != nil {
 		return err
 	}
@@ -18,8 +19,8 @@ func (s *Service) Setup(ctx context.Context, projectName string, _ bool) error {
 	return nil
 }
 
-func processSetupTemplateFile(ctx context.Context, s *Service, projectName string) func(string, fs.DirEntry, error) error {
-	return func(path string, d fs.DirEntry, err error) error {
+func processSetupTemplateFile(ctx context.Context, s *Service, projectName string, templatesFolder string) func(string, fs.DirEntry, error) error {
+	return func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -28,12 +29,13 @@ func processSetupTemplateFile(ctx context.Context, s *Service, projectName strin
 			return nil
 		}
 
-		content, err := os.ReadFile(path)
+		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
 
-		destinationPathTemplate, _ := strings.CutPrefix(path, "templates/setup/")
+		localFolderPath := fmt.Sprintf("%s%c", path.Join(templatesFolder, "setup"), os.PathSeparator)
+		destinationPathTemplate, _ := strings.CutPrefix(filePath, localFolderPath)
 		destinationPathTemplate = strings.TrimSuffix(destinationPathTemplate, ".ot")
 
 		destinationPath := s.ReplacePlaceholders(ctx, destinationPathTemplate, projectName)

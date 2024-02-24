@@ -29,11 +29,12 @@ type OxgenApp struct {
 }
 
 type SetupCommand struct {
-	Name  string `required:"" help:"Name of the project"`
-	Force bool   `help:"Forcibly initialize even if the folder is not empty."`
+	Name            string `required:"" help:"Name of the project"`
+	TemplatesFolder string `default:"templates" help:"Folder where the templates are stored"`
+	Force           bool   `help:"Forcibly initialize even if the folder is not empty."`
 }
 
 func (i *SetupCommand) Run(ctx *kong.Context) error {
 	s := generator.New()
-	return s.Setup(context.Background(), i.Name, i.Force)
+	return s.Setup(context.Background(), i.Name, i.TemplatesFolder, i.Force)
 }

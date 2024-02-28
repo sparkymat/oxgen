@@ -1,7 +1,15 @@
 package generator
 
-func New() *Service {
-	return &Service{}
+func New(config Config) *Service {
+	lookupTable := generateLookupTable(config)
+
+	return &Service{
+		Config:      config,
+		LookupTable: lookupTable,
+	}
 }
 
-type Service struct{}
+type Service struct {
+	Config      Config
+	LookupTable map[string]string
+}

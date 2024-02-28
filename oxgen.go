@@ -2,39 +2,47 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"os"
 
-	"github.com/alecthomas/kong"
 	"github.com/sparkymat/oxgen/internal/generator"
+	"github.com/sparkymat/oxgen/internal/git"
 )
 
+var ErrUncommittedChanges = errors.New("uncommitted changes")
+
 func main() {
-	app := OxgenApp{}
-	ctx := kong.Parse(
-		&app,
-		kong.Name("oxgen"),
-		kong.Description("A web-app generator"),
-		kong.UsageOnError(),
-		kong.ConfigureHelp(kong.HelpOptions{
-			Compact: true,
-			Summary: true,
-		}),
-	)
+	var err error
 
-	err := ctx.Run(&kong.Context{})
-	ctx.FatalIfErrorf(err)
-}
+	configContents, err := os.ReadFile("oxgen.json")
+	if err != nil {
+		panic(err)
+	}
 
-type OxgenApp struct {
-	Setup SetupCommand `cmd:"" help:"Initialize a new project"`
-}
+	gitRepo, err := git.New()
+	if err != nil {
+		panic(err)
+	}
 
-type SetupCommand struct {
-	Name            string `required:"" help:"Name of the project"`
-	TemplatesFolder string `default:"templates" help:"Folder where the templates are stored"`
-	Force           bool   `help:"Forcibly initialize even if the folder is not empty."`
-}
+	repoClean, err := gitRepo.StatusClean()
+	if err != nil {
+		panic(err)
+	}
 
-func (i *SetupCommand) Run(ctx *kong.Context) error {
-	s := generator.New()
-	return s.Setup(context.Background(), i.Name, i.TemplatesFolder, i.Force)
+	if !repoClean {
+		panic(ErrUncommittedChanges)
+	}
+
+	var config generator.Config
+	if err = json.Unmarshal(configContents, &config); err != nil {
+		panic(err)
+	}
+
+	s := generator.New(config)
+
+	err = s.Generate(context.Background()) //nolint:wrapcheck
+	if err != nil {
+		panic(err)
+	}
 }

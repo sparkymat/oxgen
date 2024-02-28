@@ -72,12 +72,17 @@ func processTemplateFile(ctx context.Context, s *Service) func(string, fs.DirEnt
 		destinationPathTemplate = strings.TrimSuffix(destinationPathTemplate, ".ot")
 
 		destinationPath := s.ReplacePlaceholders(ctx, destinationPathTemplate)
+		destinationFolder := path.Dir(destinationPath)
 
-		extention := path.Ext(destinationPath)
+		if err := os.MkdirAll(destinationFolder, 0o755); err != nil {
+			return fmt.Errorf("failed to create folder: %w", err)
+		}
+
+		ext := path.Ext(destinationPath)
 
 		destinationContents := string(content)
 
-		if extention == ".ot" {
+		if ext == ".ot" {
 			destinationContents = s.ReplacePlaceholders(ctx, destinationContents)
 		}
 

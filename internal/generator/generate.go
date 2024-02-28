@@ -30,7 +30,7 @@ func (s *Service) Generate(ctx context.Context) error {
 
 	err := filepath.WalkDir(
 		path.Join(s.Config.TemplatesFolder, "project"),
-		processSetupTemplateFile(ctx, s),
+		processTemplateFile(ctx, s),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to process setup templates: %w", err)
@@ -52,7 +52,7 @@ func (s *Service) Generate(ctx context.Context) error {
 	return nil
 }
 
-func processSetupTemplateFile(ctx context.Context, s *Service) func(string, fs.DirEntry, error) error {
+func processTemplateFile(ctx context.Context, s *Service) func(string, fs.DirEntry, error) error {
 	return func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -73,7 +73,13 @@ func processSetupTemplateFile(ctx context.Context, s *Service) func(string, fs.D
 
 		destinationPath := s.ReplacePlaceholders(ctx, destinationPathTemplate)
 
-		destinationContents := s.ReplacePlaceholders(ctx, string(content))
+		extention := path.Ext(destinationPath)
+
+		destinationContents := string(content)
+
+		if extention == ".ot" {
+			destinationContents = s.ReplacePlaceholders(ctx, destinationContents)
+		}
 
 		if err := os.WriteFile(destinationPath, []byte(destinationContents), 0o644); err != nil {
 			return fmt.Errorf("failed to write file: %w", err)

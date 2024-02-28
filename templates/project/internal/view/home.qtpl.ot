@@ -1,0 +1,3 @@
+{% func Home() %}
+  <div id="oxbook-app"></div>
+{% endfunc %}

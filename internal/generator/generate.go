@@ -78,10 +78,9 @@ func processTemplateFile(ctx context.Context, s *Service) func(string, fs.DirEnt
 			return fmt.Errorf("failed to create folder: %w", err)
 		}
 
-		ext := path.Ext(destinationPath)
-
 		destinationContents := string(content)
 
+		ext := path.Ext(filePath)
 		if ext == ".ot" {
 			destinationContents = s.ReplacePlaceholders(ctx, destinationContents)
 		}

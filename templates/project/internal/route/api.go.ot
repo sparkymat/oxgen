@@ -3,7 +3,6 @@ package route
 import (
 	"__REPO__/internal"
 	"__REPO__/internal/auth"
-	"__REPO__/internal/handler/api"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

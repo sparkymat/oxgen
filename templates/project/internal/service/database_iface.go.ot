@@ -3,30 +3,12 @@ package service
 import (
 	"context"
 
-	"git.orion.home/oxhead/oxbook.git/internal/dbx"
+	"__REPO__/internal/dbx"
 	"github.com/google/uuid"
 )
 
 //nolint:interfacebloat
 type DatabaseProvider interface {
-	ClearPersonParents(ctx context.Context, personID uuid.UUID) error
-	CountSearchedPeople(ctx context.Context, name string) (int64, error)
-	CreatePartnership(ctx context.Context, arg dbx.CreatePartnershipParams) (dbx.Partnership, error)
-	CreatePerson(ctx context.Context, name string) (dbx.Person, error)
 	CreateUser(ctx context.Context, arg dbx.CreateUserParams) (dbx.User, error)
-	DeletePerson(ctx context.Context, id uuid.UUID) error
-	FetchPartnershipsForPerson(ctx context.Context, personID uuid.UUID) ([]dbx.Partnership, error)
-	FetchPeopleByIDs(ctx context.Context, peopleIds []uuid.UUID) ([]dbx.Person, error)
-	FetchPeopleByParentPartnershipIDs(ctx context.Context, parentPartnershipIds []uuid.UUID) ([]dbx.Person, error)
-	FetchPerson(ctx context.Context, id uuid.UUID) (dbx.Person, error)
 	FetchUserByUsername(ctx context.Context, username string) (dbx.User, error)
-	MarkPersonDead(ctx context.Context, personID uuid.UUID) error
-	MarkPersonNotDead(ctx context.Context, personID uuid.UUID) error
-	SearchPeople(ctx context.Context, arg dbx.SearchPeopleParams) ([]dbx.Person, error)
-	TouchPerson(ctx context.Context, id uuid.UUID) error
-	UpdatePersonAvatar(ctx context.Context, arg dbx.UpdatePersonAvatarParams) error
-	UpdatePersonDob(ctx context.Context, arg dbx.UpdatePersonDobParams) error
-	UpdatePersonDod(ctx context.Context, arg dbx.UpdatePersonDodParams) error
-	UpdatePersonName(ctx context.Context, arg dbx.UpdatePersonNameParams) error
-	UpdatePersonParents(ctx context.Context, arg dbx.UpdatePersonParentsParams) error
 }

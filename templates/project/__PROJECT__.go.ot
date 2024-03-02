@@ -39,8 +39,6 @@ func main() {
 
 	userService := user.New(db)
 
-	peopleService := people.New(cfg.StorageFolder(), db)
-
 	services := internal.Services{
 		User:   userService,
 	}

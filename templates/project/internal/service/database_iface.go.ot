@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"__REPO__/internal/dbx"
-	"github.com/google/uuid"
 )
 
 //nolint:interfacebloat

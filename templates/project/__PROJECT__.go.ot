@@ -8,7 +8,6 @@ import (
 	"__REPO__/internal/database"
 	"__REPO__/internal/dbx"
 	"__REPO__/internal/route"
-	"__REPO__/internal/service/people"
 	"__REPO__/internal/service/user"
 	"github.com/hibiken/asynq"
 	"github.com/labstack/echo/v4"

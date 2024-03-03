@@ -1,15 +1,11 @@
 package generator
 
 func New(config Config) *Service {
-	lookupTable := generateLookupTableForProject(config)
-
 	return &Service{
-		Config:      config,
-		LookupTable: lookupTable,
+		Config: config,
 	}
 }
 
 type Service struct {
-	Config      Config
-	LookupTable map[string]string
+	Config Config
 }

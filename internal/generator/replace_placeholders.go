@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-func (s *Service) ReplacePlaceholders(_ context.Context, templateString string) string {
+func replacePlaceholders(_ context.Context, lookupTable map[string]string, templateString string) string {
 	finalString := templateString
 
-	for k, v := range s.LookupTable {
+	for k, v := range lookupTable {
 		if k != "" {
 			finalString = strings.ReplaceAll(finalString, k, v)
 		}

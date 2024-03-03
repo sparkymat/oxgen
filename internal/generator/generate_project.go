@@ -18,7 +18,7 @@ func (s *Service) GenerateProject(ctx context.Context) error {
 
 	err := filepath.WalkDir(
 		path.Join(s.Config.TemplatesFolder, "project"),
-		processTemplateFile(ctx, s, projectLookupTable),
+		processTemplateFile(ctx, s, "project", projectLookupTable),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to process setup templates: %w", err)
@@ -29,7 +29,7 @@ func (s *Service) GenerateProject(ctx context.Context) error {
 	return nil
 }
 
-func processTemplateFile(ctx context.Context, s *Service, lookupTable map[string]string) func(string, fs.DirEntry, error) error {
+func processTemplateFile(ctx context.Context, s *Service, folder string, lookupTable map[string]string) func(string, fs.DirEntry, error) error {
 	return func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -44,7 +44,7 @@ func processTemplateFile(ctx context.Context, s *Service, lookupTable map[string
 			return fmt.Errorf("failed to read file: %w", err)
 		}
 
-		localFolderPath := fmt.Sprintf("%s%c", path.Join(s.Config.TemplatesFolder, "project"), os.PathSeparator)
+		localFolderPath := fmt.Sprintf("%s%c", path.Join(s.Config.TemplatesFolder, folder), os.PathSeparator)
 		destinationPathTemplate, _ := strings.CutPrefix(filePath, localFolderPath)
 		destinationPathTemplate = strings.TrimSuffix(destinationPathTemplate, ".ot")
 

@@ -15,7 +15,7 @@ func (s *Service) GenerateResource(ctx context.Context, resource Resource) error
 
 	err := filepath.WalkDir(
 		path.Join(s.Config.TemplatesFolder, "resource"),
-		processTemplateFile(ctx, s, resourceLookupTable),
+		processTemplateFile(ctx, s, "resource", resourceLookupTable),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to process setup templates: %w", err)

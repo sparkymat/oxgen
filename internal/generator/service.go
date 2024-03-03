@@ -1,7 +1,7 @@
 package generator
 
 func New(config Config) *Service {
-	lookupTable := generateLookupTable(config)
+	lookupTable := generateLookupTableForProject(config)
 
 	return &Service{
 		Config:      config,

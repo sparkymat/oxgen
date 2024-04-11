@@ -6,11 +6,14 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/sparkymat/oxgen/internal/generator"
 	"github.com/sparkymat/oxgen/internal/git"
 	"github.com/spf13/cobra"
 )
 
 var ErrUncommittedChanges = errors.New("uncommitted changes")
+
+var name string
 
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
@@ -36,9 +39,18 @@ var resourceCmd = &cobra.Command{
 		if !repoClean {
 			panic(ErrUncommittedChanges)
 		}
+
+		gen := generator.New()
+
+		if err = gen.Generate(cmd.Context(), name); err != nil {
+			panic(err)
+		}
 	},
 }
 
 func init() {
+	resourceCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the resource to generate")
+	resourceCmd.MarkFlagRequired("name")
+
 	rootCmd.AddCommand(resourceCmd)
 }

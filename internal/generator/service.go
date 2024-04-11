@@ -1,11 +1,8 @@
 package generator
 
-func New(config Config) *Service {
-	return &Service{
-		Config: config,
-	}
+func New() *Service {
+	return &Service{}
 }
 
 type Service struct {
-	Config Config
 }

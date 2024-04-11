@@ -15,6 +15,8 @@ var ErrUncommittedChanges = errors.New("uncommitted changes")
 
 var name string
 
+var skipGitCheck bool
+
 // resourceCmd represents the resource command
 var resourceCmd = &cobra.Command{
 	Use:   "resource",
@@ -25,24 +27,26 @@ var resourceCmd = &cobra.Command{
 
 		log.Info().Msg("Generating resource")
 
-		log.Info().Msg("Checking for uncommitted changes")
-		gitRepo, err := git.New()
-		if err != nil {
-			panic(err)
-		}
+		if !skipGitCheck {
+			log.Info().Msg("Checking for uncommitted changes")
+			gitRepo, err := git.New()
+			if err != nil {
+				panic(err)
+			}
 
-		repoClean, err := gitRepo.StatusClean()
-		if err != nil {
-			panic(err)
-		}
+			repoClean, err := gitRepo.StatusClean()
+			if err != nil {
+				panic(err)
+			}
 
-		if !repoClean {
-			panic(ErrUncommittedChanges)
+			if !repoClean {
+				panic(ErrUncommittedChanges)
+			}
 		}
 
 		gen := generator.New()
 
-		if err = gen.Generate(cmd.Context(), name); err != nil {
+		if err := gen.Generate(cmd.Context(), name); err != nil {
 			panic(err)
 		}
 	},
@@ -51,6 +55,8 @@ var resourceCmd = &cobra.Command{
 func init() {
 	resourceCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the resource to generate")
 	resourceCmd.MarkFlagRequired("name")
+
+	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "s", false, "Skip check for uncommitted changes")
 
 	rootCmd.AddCommand(resourceCmd)
 }

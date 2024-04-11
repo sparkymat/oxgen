@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/sparkymat/oxgen/cmd"
 	"github.com/sparkymat/oxgen/internal/generator"
 	"github.com/sparkymat/oxgen/internal/git"
 )
@@ -13,6 +14,10 @@ import (
 var ErrUncommittedChanges = errors.New("uncommitted changes")
 
 func main() {
+	cmd.Execute()
+}
+
+func oldMain() {
 	var err error
 
 	configContents, err := os.ReadFile("oxgen.json")

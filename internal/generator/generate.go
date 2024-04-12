@@ -4,12 +4,29 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 )
 
 var ErrInvalidResourceName = errors.New("invalid resource name")
+
+func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) error {
+	// check if the workspace folder exists
+	if info, err := os.Stat(workspaceFolder); os.IsNotExist(err) || !info.IsDir() {
+		return fmt.Errorf("workspace folder %s does not exist: %w", workspaceFolder, err)
+	}
+
+	// Ensure Makefile
+	makeFilePath := filepath.Join(workspaceFolder, "Makefile")
+	if _, err := os.Stat(makeFilePath); os.IsNotExist(err) {
+		return fmt.Errorf("Makefile not found in workspace folder %s: %w", workspaceFolder, err) //nolint:stylecheck
+	}
+
+	return nil
+}
 
 func (s *Service) Generate(ctx context.Context, name string, fieldStrings []string) error {
 	if err := ensureValidResourceName(name); err != nil {

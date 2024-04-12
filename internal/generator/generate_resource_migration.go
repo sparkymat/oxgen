@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-var upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
+const upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
 
 CREATE TABLE {{.ResourceUnderscorePlural}} (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -28,10 +28,10 @@ CREATE TRIGGER {{.ResourceUnderscorePlural}}_updated_at
     EXECUTE FUNCTION moddatetime(updated_at);
 `
 
-var downTemplate = `DROP TABLE {{.ResourceUnderscorePlural}};
+const downTemplate = `DROP TABLE {{.ResourceUnderscorePlural}};
 `
 
-func (s *Service) generateResourceMigration(ctx context.Context, name string, fields []Field) error {
+func (s *Service) generateResourceMigration(_ context.Context, name string, fields []Field) error {
 	if err := s.ensureFolderExists("migrations"); err != nil {
 		return err
 	}

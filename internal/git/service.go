@@ -1,3 +1,4 @@
+// Package git is a wrapper around go-git package.
 package git
 
 import gitpkg "github.com/go-git/go-git/v5"

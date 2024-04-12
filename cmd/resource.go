@@ -13,9 +13,11 @@ import (
 
 var ErrUncommittedChanges = errors.New("uncommitted changes")
 
-var skipGitCheck bool
+var skipGitCheck bool //nolint:gochecknoglobals
 
-// resourceCmd represents the resource command
+var workspaceFolder string //nolint:gochecknoglobals
+
+//nolint:gochecknoglobals
 var resourceCmd = &cobra.Command{
 	Use:   "resource",
 	Short: "resource generates a new resource for the project",
@@ -45,6 +47,10 @@ var resourceCmd = &cobra.Command{
 
 		gen := generator.New()
 
+		if err := gen.CheckValidProject(cmd.Context(), workspaceFolder); err != nil {
+			panic(err)
+		}
+
 		name := args[0]
 
 		fields := args[1:]
@@ -55,8 +61,10 @@ var resourceCmd = &cobra.Command{
 	},
 }
 
+//nolint:gochecknoinits
 func init() {
 	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "s", false, "Skip check for uncommitted changes")
+	resourceCmd.Flags().StringVarP(&workspaceFolder, "path", "p", ".", "Path to workspace")
 
 	rootCmd.AddCommand(resourceCmd)
 }

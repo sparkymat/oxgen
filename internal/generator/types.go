@@ -7,9 +7,7 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
-var (
-	ErrInvalidResourceField = errors.New("invalid resource field")
-)
+var ErrInvalidResourceField = errors.New("invalid resource field")
 
 type MigrationTemplateInput struct {
 	ResourceUnderscorePlural string
@@ -31,7 +29,7 @@ const (
 	FieldTypeBool       FieldType = "bool"
 	FieldTypeUUID       FieldType = "uuid"
 	FieldTypeReferences FieldType = "references"
-	FieldTypeUnknown    FieldType = "unkown"
+	FieldTypeUnknown    FieldType = "unknown"
 )
 
 func (f FieldType) String() string {
@@ -43,13 +41,14 @@ func (f FieldType) String() string {
 	case FieldTypeBool:
 		return "bool"
 	case FieldTypeUUID:
-		return "uuid"
+		return "uuid" //nolint:goconst
 	case FieldTypeReferences:
 		return "uuid"
+	case FieldTypeUnknown:
+		return "unknown"
 	default:
 		return "unknown"
 	}
-
 }
 
 type Field struct {
@@ -60,16 +59,19 @@ type Field struct {
 	Default   *string
 }
 
+//nolint:funlen,revive,cyclop
 func ParseField(fieldString string) (Field, error) {
 	words := strings.Split(fieldString, ":")
 
+	//nolint:gomnd
 	if len(words) < 2 {
 		return Field{}, ErrInvalidResourceField
 	}
 
 	name := words[0]
 	fieldTypeString := words[1]
-	fieldType := FieldTypeUnknown
+
+	var fieldType FieldType
 
 	switch fieldTypeString {
 	case "string":
@@ -91,33 +93,35 @@ func ParseField(fieldString string) (Field, error) {
 	}
 
 	modifiers := ""
+
 	var defaultValue *string
 
 	for _, word := range words[2:] {
-		if strings.HasPrefix(word, "default=") {
+		switch {
+		case strings.HasPrefix(word, "default="):
 			kvWords := strings.Split(word, "=")
 			w := "DEFAULT " + kvWords[1]
 			defaultValue = &w
-		} else if strings.HasPrefix(word, "table=") {
+		case strings.HasPrefix(word, "table="):
 			if modifiers != "" {
 				modifiers += " "
 			}
 
 			kvWords := strings.Split(word, "=")
 			modifiers += "REFERENCES " + kvWords[1] + "(id)"
-		} else if word == "unique" {
+		case word == "unique":
 			if modifiers != "" {
 				modifiers += " "
 			}
 
 			modifiers += "UNIQUE"
-		} else if word == "not_null" {
+		case word == "not_null":
 			if modifiers != "" {
 				modifiers += " "
 			}
 
 			modifiers += "NOT NULL"
-		} else {
+		default:
 			return Field{}, ErrInvalidResourceField
 		}
 	}
@@ -144,9 +148,9 @@ func (f Field) MigrationTemplateInputField() MigrationTemplateInputField {
 		Default: func() string {
 			if f.Default == nil {
 				return ""
-			} else {
-				return *f.Default
 			}
+
+			return *f.Default
 		}(),
 	}
 }

@@ -15,6 +15,25 @@ func (s *Service) Generate(ctx context.Context, name string) error {
 		return err
 	}
 
+	// migration
+	if err := s.generateResourceMigration(ctx, name); err != nil {
+		return err
+	}
+
+	// run migration, dump schema and generate models
+
+	// add sql methods
+
+	// run sqlc gen
+
+	// copy new methods to database_iface
+
+	// add new methods to service
+
+	// add new methods to handler
+
+	// add new methods to routes
+
 	return nil
 }
 

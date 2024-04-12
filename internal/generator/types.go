@@ -100,7 +100,14 @@ func ParseField(fieldString string) (Field, error) {
 		switch {
 		case strings.HasPrefix(word, "default="):
 			kvWords := strings.Split(word, "=")
-			w := "DEFAULT " + kvWords[1]
+			w := "DEFAULT "
+
+			if fieldType == FieldTypeString {
+				w += "'" + kvWords[1] + "'"
+			} else {
+				w += kvWords[1]
+			}
+
 			defaultValue = &w
 		case strings.HasPrefix(word, "table="):
 			if modifiers != "" {

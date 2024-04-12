@@ -54,6 +54,14 @@ func (s *Service) Generate(ctx context.Context, workspaceFolder string, name str
 		return fmt.Errorf("failed running make db-migrate: %w", err)
 	}
 
+	if err := s.runCommand(workspaceFolder, "make", "db-schema-dump"); err != nil {
+		return fmt.Errorf("failed running make db-migrate: %w", err)
+	}
+
+	if err := s.runCommand(workspaceFolder, "make", "sqlc-gen"); err != nil {
+		return fmt.Errorf("failed running make db-migrate: %w", err)
+	}
+
 	// add sql methods
 
 	// run sqlc gen

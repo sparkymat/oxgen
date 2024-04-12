@@ -46,10 +46,13 @@ func (s *Service) Generate(ctx context.Context, workspaceFolder string, name str
 
 	// migration
 	if err := s.generateResourceMigration(ctx, workspaceFolder, name, fields); err != nil {
-		return err
+		return fmt.Errorf("failed generating resource migration: %w", err)
 	}
 
 	// run migration, dump schema and generate models
+	if err := s.runCommand(workspaceFolder, "make", "db-migrate"); err != nil {
+		return fmt.Errorf("failed running make db-migrate: %w", err)
+	}
 
 	// add sql methods
 

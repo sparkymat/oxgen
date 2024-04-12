@@ -28,7 +28,7 @@ func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) err
 	return nil
 }
 
-func (s *Service) Generate(ctx context.Context, name string, fieldStrings []string) error {
+func (s *Service) Generate(ctx context.Context, workspaceFolder string, name string, fieldStrings []string) error {
 	if err := ensureValidResourceName(name); err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (s *Service) Generate(ctx context.Context, name string, fieldStrings []stri
 	}
 
 	// migration
-	if err := s.generateResourceMigration(ctx, name, fields); err != nil {
+	if err := s.generateResourceMigration(ctx, workspaceFolder, name, fields); err != nil {
 		return err
 	}
 

@@ -52,10 +52,9 @@ var resourceCmd = &cobra.Command{
 		}
 
 		name := args[0]
-
 		fields := args[1:]
 
-		if err := gen.Generate(cmd.Context(), name, fields); err != nil {
+		if err := gen.Generate(cmd.Context(), workspaceFolder, name, fields); err != nil {
 			panic(err)
 		}
 	},

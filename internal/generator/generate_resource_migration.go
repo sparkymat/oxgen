@@ -31,8 +31,8 @@ CREATE TRIGGER {{.ResourceUnderscorePlural}}_updated_at
 const downTemplate = `DROP TABLE {{.ResourceUnderscorePlural}};
 `
 
-func (s *Service) generateResourceMigration(_ context.Context, name string, fields []Field) error {
-	if err := s.ensureFolderExists("migrations"); err != nil {
+func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder string, name string, fields []Field) error {
+	if err := s.ensureFolderExists(filepath.Join(workspaceFolder, "migrations")); err != nil {
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (s *Service) generateResourceMigration(_ context.Context, name string, fiel
 		return fmt.Errorf("failed to parse up template: %w", err)
 	}
 
-	upFile, err := os.Create(filepath.Join("migrations", fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.ResourceUnderscorePlural)))
+	upFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.ResourceUnderscorePlural)))
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}
@@ -66,7 +66,7 @@ func (s *Service) generateResourceMigration(_ context.Context, name string, fiel
 		return fmt.Errorf("failed to parse down template: %w", err)
 	}
 
-	downFile, err := os.Create(filepath.Join("migrations", fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.ResourceUnderscorePlural)))
+	downFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.ResourceUnderscorePlural)))
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}

@@ -3,6 +3,7 @@ package generator
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
@@ -10,13 +11,24 @@ import (
 
 var ErrInvalidResourceName = errors.New("invalid resource name")
 
-func (s *Service) Generate(ctx context.Context, name string) error {
+func (s *Service) Generate(ctx context.Context, name string, fieldStrings []string) error {
 	if err := ensureValidResourceName(name); err != nil {
 		return err
 	}
 
+	fields := []Field{}
+
+	for _, fieldString := range fieldStrings {
+		field, err := ParseField(fieldString)
+		if err != nil {
+			return fmt.Errorf("failed parsing field %s: %w", fieldString, err)
+		}
+
+		fields = append(fields, field)
+	}
+
 	// migration
-	if err := s.generateResourceMigration(ctx, name); err != nil {
+	if err := s.generateResourceMigration(ctx, name, fields); err != nil {
 		return err
 	}
 

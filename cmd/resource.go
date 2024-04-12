@@ -13,8 +13,6 @@ import (
 
 var ErrUncommittedChanges = errors.New("uncommitted changes")
 
-var name string
-
 var skipGitCheck bool
 
 // resourceCmd represents the resource command
@@ -22,6 +20,7 @@ var resourceCmd = &cobra.Command{
 	Use:   "resource",
 	Short: "resource generates a new resource for the project",
 	Long:  `resource generates a new resource for the project. `,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
@@ -46,16 +45,17 @@ var resourceCmd = &cobra.Command{
 
 		gen := generator.New()
 
-		if err := gen.Generate(cmd.Context(), name); err != nil {
+		name := args[0]
+
+		fields := args[1:]
+
+		if err := gen.Generate(cmd.Context(), name, fields); err != nil {
 			panic(err)
 		}
 	},
 }
 
 func init() {
-	resourceCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the resource to generate")
-	resourceCmd.MarkFlagRequired("name")
-
 	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "s", false, "Skip check for uncommitted changes")
 
 	rootCmd.AddCommand(resourceCmd)

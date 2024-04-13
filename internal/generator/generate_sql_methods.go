@@ -8,7 +8,8 @@ import (
 	"text/template"
 )
 
-const createSQLMethodTemplate = `-- name: Create{{ .ResourceCamelcaseSingular }} :one
+const createSQLMethodTemplate = `
+-- name: Create{{ .ResourceCamelcaseSingular }} :one
 INSERT INTO {{ .ResourceUnderscorePlural }}
 ({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Name }}{{ end }})
 VALUES
@@ -16,11 +17,61 @@ VALUES
 RETURNING *;
 `
 
-func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field) error {
-	input := TemplateInputFromNameAndFields(name, fields)
+const searchSQLMethodTemplate = `
+-- name: Search{{ .ResourceCamelcasePlural }} :many
+SELECT *
+  FROM {{ .ResourceUnderscorePlural }} t
+  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%'
+  ORDER BY t.{{ .SearchField }} ASC
+  LIMIT @page_limit::int
+  OFFSET @page_offset::int;
+`
+
+const countSearchedSQLMethodTemplate = `
+-- name: CountSearched{{ .ResourceCamelcasePlural }} :many
+SELECT COUNT(id)
+  FROM {{ .ResourceUnderscorePlural }} t
+  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%';
+`
+
+const fetchByIdSQLMethodTemplate = `
+-- name: Fetch{{ .ResourceCamelcaseSingular }}ByID :one
+SELECT *
+  FROM {{ .ResourceUnderscorePlural }} t
+  WHERE id = @id::uuid
+  LIMIT 1;
+`
+
+const fetchByIdsSQLMethodTemplate = `
+-- name: Fetch{{ .ResourceCamelcasePlural }}ByID :many
+SELECT *
+  FROM {{ .ResourceUnderscorePlural }} t
+  WHERE id = ANY(@ids::uuid[]);
+`
+
+func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
+	input := TemplateInputFromNameAndFields(name, fields, searchField)
 
 	if err := s.generateSQLMethod(ctx, workspaceFolder, "create", createSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate create SQL method: %w", err)
+	}
+
+	if searchField != "" {
+		if err := s.generateSQLMethod(ctx, workspaceFolder, "search", searchSQLMethodTemplate, input); err != nil {
+			return fmt.Errorf("failed to generate search SQL method: %w", err)
+		}
+
+		if err := s.generateSQLMethod(ctx, workspaceFolder, "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
+			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
+		}
+	}
+
+	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchById", fetchByIdSQLMethodTemplate, input); err != nil {
+		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
+	}
+
+	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchByIds", fetchByIdsSQLMethodTemplate, input); err != nil {
+		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
 	}
 
 	return nil

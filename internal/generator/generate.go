@@ -28,7 +28,13 @@ func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) err
 	return nil
 }
 
-func (s *Service) Generate(ctx context.Context, workspaceFolder string, name string, fieldStrings []string) error {
+func (s *Service) Generate(
+	ctx context.Context,
+	workspaceFolder string,
+	name string,
+	fieldStrings []string,
+	searchField string,
+) error {
 	if err := ensureValidResourceName(name); err != nil {
 		return err
 	}
@@ -45,7 +51,7 @@ func (s *Service) Generate(ctx context.Context, workspaceFolder string, name str
 	}
 
 	// migration
-	if err := s.generateResourceMigration(ctx, workspaceFolder, name, fields); err != nil {
+	if err := s.generateResourceMigration(ctx, workspaceFolder, name, fields, searchField); err != nil {
 		return fmt.Errorf("failed generating resource migration: %w", err)
 	}
 
@@ -59,7 +65,7 @@ func (s *Service) Generate(ctx context.Context, workspaceFolder string, name str
 	}
 
 	// add sql methods
-	if err := s.generateSQLMethods(ctx, workspaceFolder, name, fields); err != nil {
+	if err := s.generateSQLMethods(ctx, workspaceFolder, name, fields, searchField); err != nil {
 		return fmt.Errorf("failed generating sql methods: %w", err)
 	}
 

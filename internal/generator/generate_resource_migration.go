@@ -27,12 +27,12 @@ CREATE TRIGGER {{.ResourceUnderscorePlural}}_updated_at
 const downTemplate = `DROP TABLE {{.ResourceUnderscorePlural}};
 `
 
-func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder string, name string, fields []Field) error {
+func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
 	if err := s.ensureFolderExists(filepath.Join(workspaceFolder, "migrations")); err != nil {
 		return err
 	}
 
-	input := TemplateInputFromNameAndFields(name, fields)
+	input := TemplateInputFromNameAndFields(name, fields, searchField)
 
 	timestamp := time.Now().Format("20060102150405")
 

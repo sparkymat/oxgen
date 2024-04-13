@@ -17,6 +17,8 @@ var skipGitCheck bool //nolint:gochecknoglobals
 
 var workspaceFolder string //nolint:gochecknoglobals
 
+var searchField string //nolint:gochecknoglobals
+
 //nolint:gochecknoglobals
 var resourceCmd = &cobra.Command{
 	Use:   "resource",
@@ -54,7 +56,7 @@ var resourceCmd = &cobra.Command{
 		name := args[0]
 		fields := args[1:]
 
-		if err := gen.Generate(cmd.Context(), workspaceFolder, name, fields); err != nil {
+		if err := gen.Generate(cmd.Context(), workspaceFolder, name, fields, searchField); err != nil {
 			panic(err)
 		}
 	},
@@ -64,6 +66,7 @@ var resourceCmd = &cobra.Command{
 func init() {
 	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "s", false, "Skip check for uncommitted changes")
 	resourceCmd.Flags().StringVarP(&workspaceFolder, "path", "p", ".", "Path to workspace")
+	resourceCmd.Flags().StringVarP(&searchField, "query-field", "q", "", "Field to search by")
 
 	rootCmd.AddCommand(resourceCmd)
 }

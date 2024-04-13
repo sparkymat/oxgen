@@ -13,7 +13,9 @@ var ErrInvalidResourceField = errors.New("invalid resource field")
 
 type TemplateInput struct {
 	ResourceCamelcaseSingular string
+	ResourceCamelcasePlural   string
 	ResourceUnderscorePlural  string
+	SearchField               string
 	Fields                    []TemplateInputField
 }
 
@@ -24,10 +26,12 @@ type TemplateInputField struct {
 	Default   string
 }
 
-func TemplateInputFromNameAndFields(name string, fields []Field) TemplateInput {
+func TemplateInputFromNameAndFields(name string, fields []Field, searchField string) TemplateInput {
 	return TemplateInput{
+		SearchField: searchField,
 		ResourceUnderscorePlural:  pluralize.NewClient().Plural(strcase.ToSnake(name)),
 		ResourceCamelcaseSingular: pluralize.NewClient().Singular(strcase.ToCamel(name)),
+		ResourceCamelcasePlural:   pluralize.NewClient().Plural(strcase.ToCamel(name)),
 		Fields: lo.Map(fields, func(f Field, _ int) TemplateInputField {
 			return f.TemplateInputField()
 		}),

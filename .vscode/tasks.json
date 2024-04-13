@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "clean",
+      "command": "make", // Could be any other shell command
+      "args": ["clean"],
+      "type": "shell"
+    }
+  ]
+}

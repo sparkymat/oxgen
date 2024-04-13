@@ -19,3 +19,5 @@ dist/
 
 webapp
 internal/dbx
+internal/database/schema.sql
+internal/database/queries.sql

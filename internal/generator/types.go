@@ -28,7 +28,7 @@ type TemplateInputField struct {
 
 func TemplateInputFromNameAndFields(name string, fields []Field, searchField string) TemplateInput {
 	return TemplateInput{
-		SearchField: searchField,
+		SearchField:               searchField,
 		ResourceUnderscorePlural:  pluralize.NewClient().Plural(strcase.ToSnake(name)),
 		ResourceCamelcaseSingular: pluralize.NewClient().Singular(strcase.ToCamel(name)),
 		ResourceCamelcasePlural:   pluralize.NewClient().Plural(strcase.ToCamel(name)),

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (s *Service) runCommand(workspaceFolder string, command string, args ...string) error {
+func (*Service) runCommand(workspaceFolder string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = workspaceFolder
 	cmd.Stdout = os.Stdout

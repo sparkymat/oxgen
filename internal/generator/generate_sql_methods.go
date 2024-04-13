@@ -34,7 +34,7 @@ SELECT COUNT(id)
   WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%';
 `
 
-const fetchByIdSQLMethodTemplate = `
+const fetchByIDSQLMethodTemplate = `
 -- name: Fetch{{ .ResourceCamelcaseSingular }}ByID :one
 SELECT *
   FROM {{ .ResourceUnderscorePlural }} t
@@ -42,11 +42,17 @@ SELECT *
   LIMIT 1;
 `
 
-const fetchByIdsSQLMethodTemplate = `
--- name: Fetch{{ .ResourceCamelcasePlural }}ByID :many
+const fetchByIDsSQLMethodTemplate = `
+-- name: Fetch{{ .ResourceCamelcasePlural }}ByIDs :many
 SELECT *
   FROM {{ .ResourceUnderscorePlural }} t
   WHERE id = ANY(@ids::uuid[]);
+`
+
+const deleteSQLMethodTemplate = `
+-- name: Delete{{ .ResourceCamelcaseSingular }} :exec
+DELETE FROM {{ .ResourceUnderscorePlural }} t
+  WHERE id = @id::uuid;
 `
 
 func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
@@ -66,25 +72,30 @@ func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string
 		}
 	}
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchById", fetchByIdSQLMethodTemplate, input); err != nil {
+	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
 	}
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchByIds", fetchByIdsSQLMethodTemplate, input); err != nil {
+	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
+	}
+
+	if err := s.generateSQLMethod(ctx, workspaceFolder, "delete", deleteSQLMethodTemplate, input); err != nil {
+		return fmt.Errorf("failed to generate delete SQL method: %w", err)
 	}
 
 	return nil
 }
 
-func (s *Service) generateSQLMethod(ctx context.Context, workspaceFolder string, templateName string, templateString string, input TemplateInput) error {
+func (*Service) generateSQLMethod(_ context.Context, workspaceFolder string, templateName string, templateString string, input TemplateInput) error {
 	// Create
 	tmpl, err := template.New(templateName).Parse(templateString)
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %w", err)
 	}
 
-	queriesFile, err := os.OpenFile(filepath.Join(workspaceFolder, "internal", "database", "queries.sql"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	//nolint:gosec
+	queriesFile, err := os.OpenFile(filepath.Join(workspaceFolder, "internal", "database", "queries.sql"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to open queries file: %w", err)
 	}

@@ -42,6 +42,7 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 		return fmt.Errorf("failed to parse up template: %w", err)
 	}
 
+	//nolint:gosec
 	upFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.ResourceUnderscorePlural)))
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
@@ -57,6 +58,7 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 		return fmt.Errorf("failed to parse down template: %w", err)
 	}
 
+	//nolint:gosec
 	downFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.ResourceUnderscorePlural)))
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)

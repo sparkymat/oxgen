@@ -7,10 +7,6 @@ import (
 	"path/filepath"
 	"text/template"
 	"time"
-
-	"github.com/gertd/go-pluralize"
-	"github.com/iancoleman/strcase"
-	"github.com/samber/lo"
 )
 
 const upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
@@ -36,12 +32,7 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 		return err
 	}
 
-	input := MigrationTemplateInput{
-		ResourceUnderscorePlural: pluralize.NewClient().Plural(strcase.ToSnake(name)),
-		Fields: lo.Map(fields, func(f Field, _ int) MigrationTemplateInputField {
-			return f.MigrationTemplateInputField()
-		}),
-	}
+	input := TemplateInputFromNameAndFields(name, fields)
 
 	timestamp := time.Now().Format("20060102150405")
 

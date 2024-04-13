@@ -4,21 +4,34 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
+	"github.com/samber/lo"
 )
 
 var ErrInvalidResourceField = errors.New("invalid resource field")
 
-type MigrationTemplateInput struct {
-	ResourceUnderscorePlural string
-	Fields                   []MigrationTemplateInputField
+type TemplateInput struct {
+	ResourceCamelcaseSingular string
+	ResourceUnderscorePlural  string
+	Fields                    []TemplateInputField
 }
 
-type MigrationTemplateInputField struct {
+type TemplateInputField struct {
 	Name      string
 	Type      string
 	Modifiers string
 	Default   string
+}
+
+func TemplateInputFromNameAndFields(name string, fields []Field) TemplateInput {
+	return TemplateInput{
+		ResourceUnderscorePlural:  pluralize.NewClient().Plural(strcase.ToSnake(name)),
+		ResourceCamelcaseSingular: pluralize.NewClient().Singular(strcase.ToCamel(name)),
+		Fields: lo.Map(fields, func(f Field, _ int) TemplateInputField {
+			return f.TemplateInputField()
+		}),
+	}
 }
 
 type FieldType string
@@ -141,14 +154,14 @@ func ParseField(fieldString string) (Field, error) {
 	}, nil
 }
 
-func (f Field) MigrationTemplateInputField() MigrationTemplateInputField {
+func (f Field) TemplateInputField() TemplateInputField {
 	name := strcase.ToSnake(f.Name)
 
 	if f.FieldType == FieldTypeReferences {
 		name += "_id"
 	}
 
-	return MigrationTemplateInputField{
+	return TemplateInputField{
 		Name:      name,
 		Type:      f.FieldType.String(),
 		Modifiers: f.Modifiers,

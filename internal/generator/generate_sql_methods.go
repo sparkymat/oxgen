@@ -66,35 +66,35 @@ func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string
 
 	queriesFilePath := filepath.Join(workspaceFolder, "internal", "database", "queries.sql")
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, "create", createSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "create", createSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate create SQL method: %w", err)
 	}
 
 	if searchField != "" {
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, "search", searchSQLMethodTemplate, input); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "search", searchSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate search SQL method: %w", err)
 		}
 
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
 		}
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, "delete", deleteSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "delete", deleteSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate delete SQL method: %w", err)
 	}
 
 	for _, field := range input.Fields {
 		if field.Updateable {
-			if err := s.appendTemplateToFile(ctx, queriesFilePath, "update", updateSQLMethodTemplate, field); err != nil {
+			if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "update", updateSQLMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
 			}
 		}

@@ -5,4 +5,5 @@ clean:
 	rm -f oxgen
 	rm -rf webapp/migrations
 	echo > webapp/internal/database/queries.sql
+	echo "package service; type DatabaseProvider interface {}" | goimports > webapp/internal/service/database_iface.go
 	psql webapp -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"

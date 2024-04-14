@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -41,7 +42,7 @@ func (*Service) runCommand(workspaceFolder string, command string, args ...strin
 	return nil
 }
 
-func (*Service) appendTemplateToFile(_ context.Context, filePath string, templateName string, templateString string, input any) error {
+func (*Service) appendTemplateToFile(_ context.Context, filePath string, reverseOffset int, templateName string, templateString string, input any) error {
 	// Create
 	tmpl, err := template.New(templateName).Parse(templateString)
 	if err != nil {
@@ -51,6 +52,12 @@ func (*Service) appendTemplateToFile(_ context.Context, filePath string, templat
 	queriesFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gomnd,gosec
 	if err != nil {
 		return fmt.Errorf("failed to open queries file: %w", err)
+	}
+
+	if reverseOffset > 0 {
+		if _, err := queriesFile.Seek(int64(-reverseOffset), io.SeekEnd); err != nil {
+			return fmt.Errorf("failed to seek to the end of the file: %w", err)
+		}
 	}
 
 	if err = tmpl.Execute(queriesFile, input); err != nil {

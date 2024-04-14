@@ -75,6 +75,9 @@ func (s *Service) Generate(
 	}
 
 	// copy new methods to database_iface
+	if err := s.appendDBMethodsToIface(ctx, workspaceFolder, name, fields, searchField); err != nil {
+		return fmt.Errorf("failed appending new methods to database_iface.go: %w", err)
+	}
 
 	// add new methods to service
 

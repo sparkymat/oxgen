@@ -9,18 +9,18 @@ import (
 )
 
 const createSQLMethodTemplate = `
--- name: Create{{ .ResourceCamelcaseSingular }} :one
-INSERT INTO {{ .ResourceUnderscorePlural }}
-({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Name }}{{ end }})
+-- name: Create{{ .Resource.CamelcaseSingular }} :one
+INSERT INTO {{ .Resource.UnderscorePlural }}
+({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Field.String }}{{ end }})
 VALUES
-({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Name }}::{{ $field.Type }}{{ end }})
+({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Field.String }}::{{ $field.Type }}{{ end }})
 RETURNING *;
 `
 
 const searchSQLMethodTemplate = `
--- name: Search{{ .ResourceCamelcasePlural }} :many
+-- name: Search{{ .Resource.CamelcasePlural }} :many
 SELECT *
-  FROM {{ .ResourceUnderscorePlural }} t
+  FROM {{ .Resource.UnderscorePlural }} t
   WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%'
   ORDER BY t.{{ .SearchField }} ASC
   LIMIT @page_limit::int
@@ -28,31 +28,38 @@ SELECT *
 `
 
 const countSearchedSQLMethodTemplate = `
--- name: CountSearched{{ .ResourceCamelcasePlural }} :many
+-- name: CountSearched{{ .Resource.CamelcasePlural }} :many
 SELECT COUNT(id)
-  FROM {{ .ResourceUnderscorePlural }} t
+  FROM {{ .Resource.UnderscorePlural }} t
   WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%';
 `
 
 const fetchByIDSQLMethodTemplate = `
--- name: Fetch{{ .ResourceCamelcaseSingular }}ByID :one
+-- name: Fetch{{ .Resource.CamelcaseSingular }}ByID :one
 SELECT *
-  FROM {{ .ResourceUnderscorePlural }} t
+  FROM {{ .Resource.UnderscorePlural }} t
   WHERE id = @id::uuid
   LIMIT 1;
 `
 
 const fetchByIDsSQLMethodTemplate = `
--- name: Fetch{{ .ResourceCamelcasePlural }}ByIDs :many
+-- name: Fetch{{ .Resource.CamelcasePlural }}ByIDs :many
 SELECT *
-  FROM {{ .ResourceUnderscorePlural }} t
+  FROM {{ .Resource.UnderscorePlural }} t
   WHERE id = ANY(@ids::uuid[]);
 `
 
 const deleteSQLMethodTemplate = `
--- name: Delete{{ .ResourceCamelcaseSingular }} :exec
-DELETE FROM {{ .ResourceUnderscorePlural }} t
+-- name: Delete{{ .Resource.CamelcaseSingular }} :exec
+DELETE FROM {{ .Resource.UnderscorePlural }} t
   WHERE id = @id::uuid;
+`
+
+const updateSQLMethodTemplate = `
+-- name: Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamecaseSingular }} :one
+UPDATE {{ .Resource.UnderscorePlural }} t
+SET {{ .Field.String }} = @{{ .Field.String }}::{{ .Type }}
+WHERE id = @id::uuid;
 `
 
 func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
@@ -82,6 +89,14 @@ func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string
 
 	if err := s.generateSQLMethod(ctx, workspaceFolder, "delete", deleteSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate delete SQL method: %w", err)
+	}
+
+	for _, field := range input.Fields {
+		if field.Updateable {
+			if err := s.generateSQLMethod(ctx, workspaceFolder, "update", updateSQLMethodTemplate, input); err != nil {
+				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
+			}
+		}
 	}
 
 	return nil

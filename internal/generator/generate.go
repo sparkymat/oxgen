@@ -22,7 +22,7 @@ func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) err
 	// Ensure Makefile
 	makeFilePath := filepath.Join(workspaceFolder, "Makefile")
 	if _, err := os.Stat(makeFilePath); os.IsNotExist(err) {
-		return fmt.Errorf("Makefile not found in workspace folder %s: %w", workspaceFolder, err) //nolint:stylecheck
+		return fmt.Errorf("makefile not found in workspace folder %s: %w", workspaceFolder, err)
 	}
 
 	return nil
@@ -42,7 +42,7 @@ func (s *Service) Generate(
 	fields := []Field{}
 
 	for _, fieldString := range fieldStrings {
-		field, err := ParseField(fieldString)
+		field, err := ParseField(name, fieldString)
 		if err != nil {
 			return fmt.Errorf("failed parsing field %s: %w", fieldString, err)
 		}

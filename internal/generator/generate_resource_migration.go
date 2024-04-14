@@ -11,20 +11,20 @@ import (
 
 const upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
 
-CREATE TABLE {{.ResourceUnderscorePlural}} (
+CREATE TABLE {{ .Resource.UnderscorePlural }} (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-{{range .Fields}}  {{.Name}} {{.Type}} {{.Modifiers}}{{.Default}},
+{{range .Fields}}  {{ .Field.String }} {{ .Type }} {{ .Modifiers }}{{ .Default }},
 {{end}}  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE TRIGGER {{.ResourceUnderscorePlural}}_updated_at
+CREATE TRIGGER {{ .Resource.UnderscorePlural }}_updated_at
   BEFORE UPDATE
-  ON {{.ResourceUnderscorePlural}}
+  ON {{ .Resource.UnderscorePlural }}
   FOR EACH ROW
     EXECUTE FUNCTION moddatetime(updated_at);
 `
 
-const downTemplate = `DROP TABLE {{.ResourceUnderscorePlural}};
+const downTemplate = `DROP TABLE {{ .Resource.UnderscorePlural }};
 `
 
 func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
@@ -43,7 +43,13 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 	}
 
 	//nolint:gosec
-	upFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.ResourceUnderscorePlural)))
+	upFile, err := os.Create(
+		filepath.Join(
+			workspaceFolder,
+			"migrations",
+			fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.Resource.UnderscorePlural()),
+		),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}
@@ -59,7 +65,13 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 	}
 
 	//nolint:gosec
-	downFile, err := os.Create(filepath.Join(workspaceFolder, "migrations", fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.ResourceUnderscorePlural)))
+	downFile, err := os.Create(
+		filepath.Join(
+			workspaceFolder,
+			"migrations",
+			fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.Resource.UnderscorePlural()),
+		),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}

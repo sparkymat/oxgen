@@ -11,27 +11,47 @@ import (
 
 var ErrInvalidResourceField = errors.New("invalid resource field")
 
+type TemplateName string
+
+func (t TemplateName) CamelcaseSingular() string {
+	return pluralize.NewClient().Singular(strcase.ToCamel(string(t)))
+}
+
+func (t TemplateName) CamelcasePlural() string {
+	return pluralize.NewClient().Plural(strcase.ToCamel(string(t)))
+}
+
+func (t TemplateName) UnderscoreSingular() string {
+	return pluralize.NewClient().Singular(strcase.ToSnake(string(t)))
+}
+
+func (t TemplateName) UnderscorePlural() string {
+	return pluralize.NewClient().Plural(strcase.ToSnake(string(t)))
+}
+
+func (t TemplateName) String() string {
+	return string(t)
+}
+
 type TemplateInput struct {
-	ResourceCamelcaseSingular string
-	ResourceCamelcasePlural   string
-	ResourceUnderscorePlural  string
-	SearchField               string
-	Fields                    []TemplateInputField
+	Resource    TemplateName
+	SearchField string
+	Fields      []TemplateInputField
 }
 
 type TemplateInputField struct {
-	Name      string
-	Type      string
-	Modifiers string
-	Default   string
+	Resource   TemplateName
+	Field      TemplateName
+	Type       string
+	Modifiers  string
+	Default    string
+	Updateable bool
 }
 
 func TemplateInputFromNameAndFields(name string, fields []Field, searchField string) TemplateInput {
 	return TemplateInput{
-		SearchField:               searchField,
-		ResourceUnderscorePlural:  pluralize.NewClient().Plural(strcase.ToSnake(name)),
-		ResourceCamelcaseSingular: pluralize.NewClient().Singular(strcase.ToCamel(name)),
-		ResourceCamelcasePlural:   pluralize.NewClient().Plural(strcase.ToCamel(name)),
+		SearchField: searchField,
+		Resource:    TemplateName(name),
 		Fields: lo.Map(fields, func(f Field, _ int) TemplateInputField {
 			return f.TemplateInputField()
 		}),
@@ -69,15 +89,17 @@ func (f FieldType) String() string {
 }
 
 type Field struct {
-	Name      string
-	FieldType FieldType
-	Modifiers string
-	Required  bool
-	Default   *string
+	Resource   string
+	Name       string
+	FieldType  FieldType
+	Modifiers  string
+	Required   bool
+	Default    *string
+	Updateable bool
 }
 
 //nolint:funlen,revive,cyclop
-func ParseField(fieldString string) (Field, error) {
+func ParseField(resource string, fieldString string) (Field, error) {
 	words := strings.Split(fieldString, ":")
 
 	//nolint:gomnd
@@ -113,6 +135,8 @@ func ParseField(fieldString string) (Field, error) {
 
 	var defaultValue *string
 
+	updateable := false
+
 	for _, word := range words[2:] {
 		switch {
 		case strings.HasPrefix(word, "default="):
@@ -145,16 +169,20 @@ func ParseField(fieldString string) (Field, error) {
 			}
 
 			modifiers += "NOT NULL"
+		case word == "updateable":
+			updateable = true
 		default:
 			return Field{}, ErrInvalidResourceField
 		}
 	}
 
 	return Field{
-		Name:      name,
-		FieldType: fieldType,
-		Modifiers: modifiers,
-		Default:   defaultValue,
+		Resource:   resource,
+		Name:       name,
+		Updateable: updateable,
+		FieldType:  fieldType,
+		Modifiers:  modifiers,
+		Default:    defaultValue,
 	}, nil
 }
 
@@ -166,9 +194,11 @@ func (f Field) TemplateInputField() TemplateInputField {
 	}
 
 	return TemplateInputField{
-		Name:      name,
-		Type:      f.FieldType.String(),
-		Modifiers: f.Modifiers,
+		Resource:   TemplateName(f.Resource),
+		Field:      TemplateName(name),
+		Updateable: f.Updateable,
+		Type:       f.FieldType.String(),
+		Modifiers:  f.Modifiers,
 		Default: func() string {
 			if f.Default == nil {
 				return ""

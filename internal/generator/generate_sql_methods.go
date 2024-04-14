@@ -3,9 +3,7 @@ package generator
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
-	"text/template"
 )
 
 const createSQLMethodTemplate = `
@@ -66,58 +64,40 @@ RETURNING *;
 func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
 	input := TemplateInputFromNameAndFields(name, fields, searchField)
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "create", createSQLMethodTemplate, input); err != nil {
+	queriesFilePath := filepath.Join(workspaceFolder, "internal", "database", "queries.sql")
+
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, "create", createSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate create SQL method: %w", err)
 	}
 
 	if searchField != "" {
-		if err := s.generateSQLMethod(ctx, workspaceFolder, "search", searchSQLMethodTemplate, input); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, "search", searchSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate search SQL method: %w", err)
 		}
 
-		if err := s.generateSQLMethod(ctx, workspaceFolder, "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
 		}
 	}
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
 	}
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
 	}
 
-	if err := s.generateSQLMethod(ctx, workspaceFolder, "delete", deleteSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, "delete", deleteSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate delete SQL method: %w", err)
 	}
 
 	for _, field := range input.Fields {
 		if field.Updateable {
-			if err := s.generateSQLMethod(ctx, workspaceFolder, "update", updateSQLMethodTemplate, field); err != nil {
+			if err := s.appendTemplateToFile(ctx, queriesFilePath, "update", updateSQLMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
 			}
 		}
-	}
-
-	return nil
-}
-
-func (*Service) generateSQLMethod(_ context.Context, workspaceFolder string, templateName string, templateString string, input any) error {
-	// Create
-	tmpl, err := template.New(templateName).Parse(templateString)
-	if err != nil {
-		return fmt.Errorf("failed to parse template: %w", err)
-	}
-
-	//nolint:gosec
-	queriesFile, err := os.OpenFile(filepath.Join(workspaceFolder, "internal", "database", "queries.sql"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-	if err != nil {
-		return fmt.Errorf("failed to open queries file: %w", err)
-	}
-
-	if err = tmpl.Execute(queriesFile, input); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
 	}
 
 	return nil

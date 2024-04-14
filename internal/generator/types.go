@@ -208,6 +208,13 @@ func (f Field) TemplateInputField() TemplateInputField {
 		name += "_id"
 	case FieldTypeAttachment:
 		name += "_path"
+	case FieldTypeDate:
+	case FieldTypeTimestamp:
+	case FieldTypeUUID:
+	case FieldTypeBool:
+	case FieldTypeInt:
+	case FieldTypeString:
+	case FieldTypeUnknown:
 	default:
 	}
 

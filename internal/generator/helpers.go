@@ -2,11 +2,13 @@
 package generator
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+	"text/template"
 )
 
 var ErrInvalidPath = errors.New("invalid path")
@@ -34,6 +36,25 @@ func (*Service) runCommand(workspaceFolder string, command string, args ...strin
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed running %s %s: %w", command, strings.Join(args, " "), err)
+	}
+
+	return nil
+}
+
+func (*Service) appendTemplateToFile(_ context.Context, filePath string, templateName string, templateString string, input any) error {
+	// Create
+	tmpl, err := template.New(templateName).Parse(templateString)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	queriesFile, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644) //nolint:gomnd,gosec
+	if err != nil {
+		return fmt.Errorf("failed to open queries file: %w", err)
+	}
+
+	if err = tmpl.Execute(queriesFile, input); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
 	}
 
 	return nil

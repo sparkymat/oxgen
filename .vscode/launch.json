@@ -22,9 +22,12 @@
         "name",
         "-s",
         "User",
-        "name:string:default=",
+        "name:string:default=:updateable",
         "username:string:not_null:unique",
-        "encrypted_password:string:not_null"
+        "encrypted_password:string:not_null",
+        "age:int:updateable",
+        "dob:date:updateable",
+        "photo:attachment"
       ]
     }
   ]

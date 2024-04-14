@@ -1,5 +1,5 @@
 gen: clean
-	go run oxgen.go resource -p webapp -q name -s User name:string:default= username:string:not_null:unique encrypted_password:string:not_null
+	go run oxgen.go resource -p webapp -q name -s User name:string:default=:updateable username:string:not_null:unique encrypted_password:string:not_null age:int:updateable dob:date:updateable photo:attachment
 
 clean:
 	rm -f oxgen

@@ -56,10 +56,11 @@ DELETE FROM {{ .Resource.UnderscorePlural }} t
 `
 
 const updateSQLMethodTemplate = `
--- name: Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamecaseSingular }} :one
+-- name: Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamelcaseSingular }} :one
 UPDATE {{ .Resource.UnderscorePlural }} t
 SET {{ .Field.String }} = @{{ .Field.String }}::{{ .Type }}
-WHERE id = @id::uuid;
+WHERE id = @id::uuid
+RETURNING *;
 `
 
 func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
@@ -93,7 +94,7 @@ func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string
 
 	for _, field := range input.Fields {
 		if field.Updateable {
-			if err := s.generateSQLMethod(ctx, workspaceFolder, "update", updateSQLMethodTemplate, input); err != nil {
+			if err := s.generateSQLMethod(ctx, workspaceFolder, "update", updateSQLMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
 			}
 		}
@@ -102,7 +103,7 @@ func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string
 	return nil
 }
 
-func (*Service) generateSQLMethod(_ context.Context, workspaceFolder string, templateName string, templateString string, input TemplateInput) error {
+func (*Service) generateSQLMethod(_ context.Context, workspaceFolder string, templateName string, templateString string, input any) error {
 	// Create
 	tmpl, err := template.New(templateName).Parse(templateString)
 	if err != nil {

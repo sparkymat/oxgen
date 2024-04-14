@@ -64,8 +64,11 @@ const (
 	FieldTypeString     FieldType = "string"
 	FieldTypeInt        FieldType = "int"
 	FieldTypeBool       FieldType = "bool"
+	FieldTypeDate       FieldType = "date"
+	FieldTypeTimestamp  FieldType = "timestamp"
 	FieldTypeUUID       FieldType = "uuid"
 	FieldTypeReferences FieldType = "references"
+	FieldTypeAttachment FieldType = "attachment"
 	FieldTypeUnknown    FieldType = "unknown"
 )
 
@@ -81,6 +84,12 @@ func (f FieldType) String() string {
 		return "uuid" //nolint:goconst
 	case FieldTypeReferences:
 		return "uuid"
+	case FieldTypeAttachment:
+		return "text"
+	case FieldTypeDate:
+		return "date"
+	case FieldTypeTimestamp:
+		return "timestamp"
 	case FieldTypeUnknown:
 		return "unknown"
 	default:
@@ -109,8 +118,12 @@ func ParseField(resource string, fieldString string) (Field, error) {
 
 	name := words[0]
 	fieldTypeString := words[1]
+	modifiers := ""
+	updateable := false
 
 	var fieldType FieldType
+
+	var defaultValue *string
 
 	switch fieldTypeString {
 	case "string":
@@ -123,6 +136,13 @@ func ParseField(resource string, fieldString string) (Field, error) {
 		fieldType = FieldTypeUUID
 	case "references":
 		fieldType = FieldTypeReferences
+	case "attachment":
+		fieldType = FieldTypeAttachment
+		updateable = true
+	case "date":
+		fieldType = FieldTypeDate
+	case "timestamp":
+		fieldType = FieldTypeTimestamp
 	default:
 		fieldType = FieldTypeUnknown
 	}
@@ -130,12 +150,6 @@ func ParseField(resource string, fieldString string) (Field, error) {
 	if fieldType == FieldTypeUnknown {
 		return Field{}, ErrInvalidResourceField
 	}
-
-	modifiers := ""
-
-	var defaultValue *string
-
-	updateable := false
 
 	for _, word := range words[2:] {
 		switch {
@@ -189,8 +203,12 @@ func ParseField(resource string, fieldString string) (Field, error) {
 func (f Field) TemplateInputField() TemplateInputField {
 	name := strcase.ToSnake(f.Name)
 
-	if f.FieldType == FieldTypeReferences {
+	switch f.FieldType {
+	case FieldTypeReferences:
 		name += "_id"
+	case FieldTypeAttachment:
+		name += "_path"
+	default:
 	}
 
 	return TemplateInputField{

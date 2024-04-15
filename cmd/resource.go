@@ -15,6 +15,8 @@ var ErrUncommittedChanges = errors.New("uncommitted changes")
 
 var skipGitCheck bool //nolint:gochecknoglobals
 
+var service string //nolint:checknoglobals
+
 var workspaceFolder string //nolint:gochecknoglobals
 
 var searchField string //nolint:gochecknoglobals
@@ -56,7 +58,15 @@ var resourceCmd = &cobra.Command{
 		name := args[0]
 		fields := args[1:]
 
-		if err := gen.Generate(cmd.Context(), workspaceFolder, name, fields, searchField); err != nil {
+		input := generator.GenerateInput{
+			WorkspaceFolder: workspaceFolder,
+			Name:            name,
+			FieldStrings:    fields,
+			Service:         service,
+			SearchField:     searchField,
+		}
+
+		if err := gen.Generate(cmd.Context(), input); err != nil {
 			panic(err)
 		}
 	},
@@ -64,9 +74,11 @@ var resourceCmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "s", false, "Skip check for uncommitted changes")
+	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "g", false, "Skip git check for uncommitted changes")
 	resourceCmd.Flags().StringVarP(&workspaceFolder, "path", "p", ".", "Path to workspace")
 	resourceCmd.Flags().StringVarP(&searchField, "query-field", "q", "", "Field to search by")
+	resourceCmd.Flags().StringVarP(&service, "service", "s", "", "Service that the resource belongs to")
+	resourceCmd.MarkFlagRequired("service")
 
 	rootCmd.AddCommand(resourceCmd)
 }

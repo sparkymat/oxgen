@@ -29,6 +29,18 @@ func (t TemplateName) UnderscorePlural() string {
 	return pluralize.NewClient().Plural(strcase.ToSnake(string(t)))
 }
 
+func (t TemplateName) Upcase() string {
+	return strings.ToUpper(string(t))
+}
+
+func (t TemplateName) Downcase() string {
+	return strings.ToLower(string(t))
+}
+
+func (t TemplateName) Capitalize() string {
+	return strings.ToUpper(string(t)[0:1]) + string(t)[1:]
+}
+
 func (t TemplateName) String() string {
 	return string(t)
 }

@@ -85,6 +85,11 @@ func (s *Service) Generate(
 	}
 
 	// add new methods to service
+	if err := s.ensureServiceExists(ctx, input); err != nil {
+		return fmt.Errorf("failed ensuring service exists: %w", err)
+	}
+
+	// add methods to service interface
 
 	// add new methods to handler
 

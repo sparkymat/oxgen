@@ -29,6 +29,32 @@ func (*Service) ensureFolderExists(path string) error {
 	return nil
 }
 
+func (*Service) ensureFileExists(path string, templateName string, templateString string, templateInput any) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		file, err := os.Create(path)
+		if err != nil {
+			return fmt.Errorf("failed to create file: %w", err)
+		}
+
+		defer file.Close()
+
+		tmpl, err := template.New(templateName).Parse(templateString)
+		if err != nil {
+			return fmt.Errorf("failed to parse template: %w", err)
+		}
+
+		if err = tmpl.Execute(file, templateInput); err != nil {
+			return fmt.Errorf("failed to execute template: %w", err)
+		}
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("path not found: %w", ErrInvalidPath)
+	}
+
+	return nil
+}
+
 func (*Service) runCommand(workspaceFolder string, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Dir = workspaceFolder

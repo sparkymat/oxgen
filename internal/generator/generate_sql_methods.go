@@ -61,38 +61,38 @@ WHERE id = @id::uuid
 RETURNING *;
 `
 
-func (s *Service) generateSQLMethods(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
-	input := TemplateInputFromNameAndFields(name, fields, searchField)
+func (s *Service) generateSQLMethods(ctx context.Context, input GenerateInput) error {
+	templateInput := TemplateInputFromGenerateInput(input)
 
-	queriesFilePath := filepath.Join(workspaceFolder, "internal", "database", "queries.sql")
+	queriesFilePath := filepath.Join(input.WorkspaceFolder, "internal", "database", "queries.sql")
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "create", createSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "create", createSQLMethodTemplate, templateInput); err != nil {
 		return fmt.Errorf("failed to generate create SQL method: %w", err)
 	}
 
-	if searchField != "" {
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "search", searchSQLMethodTemplate, input); err != nil {
+	if input.SearchField != "" {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "search", searchSQLMethodTemplate, templateInput); err != nil {
 			return fmt.Errorf("failed to generate search SQL method: %w", err)
 		}
 
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countSearched", countSearchedSQLMethodTemplate, templateInput); err != nil {
 			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
 		}
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchById", fetchByIDSQLMethodTemplate, templateInput); err != nil {
 		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchByIds", fetchByIDsSQLMethodTemplate, templateInput); err != nil {
 		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "delete", deleteSQLMethodTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "delete", deleteSQLMethodTemplate, templateInput); err != nil {
 		return fmt.Errorf("failed to generate delete SQL method: %w", err)
 	}
 
-	for _, field := range input.Fields {
+	for _, field := range templateInput.Fields {
 		if field.Updateable {
 			if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "update", updateSQLMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)

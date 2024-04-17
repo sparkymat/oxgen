@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -56,12 +57,23 @@ var resourceCmd = &cobra.Command{
 		}
 
 		name := args[0]
-		fields := args[1:]
+		fieldStrings := args[1:]
+
+		fields := []generator.Field{}
+
+		for _, fieldString := range fieldStrings {
+			field, err := generator.ParseField(name, fieldString)
+			if err != nil {
+				panic(fmt.Errorf("failed parsing field %s: %w", fieldString, err))
+			}
+
+			fields = append(fields, field)
+		}
 
 		input := generator.GenerateInput{
 			WorkspaceFolder: workspaceFolder,
 			Name:            name,
-			FieldStrings:    fields,
+			Fields:          fields,
 			Service:         service,
 			SearchField:     searchField,
 		}

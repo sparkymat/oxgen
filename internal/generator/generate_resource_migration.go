@@ -27,12 +27,12 @@ CREATE TRIGGER {{ .Resource.UnderscorePlural }}_updated_at
 const downTemplate = `DROP TABLE {{ .Resource.UnderscorePlural }};
 `
 
-func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
-	if err := s.ensureFolderExists(filepath.Join(workspaceFolder, "migrations")); err != nil {
+func (s *Service) generateResourceMigration(_ context.Context, input GenerateInput) error {
+	if err := s.ensureFolderExists(filepath.Join(input.WorkspaceFolder, "migrations")); err != nil {
 		return err
 	}
 
-	input := TemplateInputFromNameAndFields(name, fields, searchField)
+	templateInput := TemplateInputFromGenerateInput(input)
 
 	timestamp := time.Now().Format("20060102150405")
 
@@ -45,16 +45,16 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 	//nolint:gosec
 	upFile, err := os.Create(
 		filepath.Join(
-			workspaceFolder,
+			input.WorkspaceFolder,
 			"migrations",
-			fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, input.Resource.UnderscorePlural()),
+			fmt.Sprintf("%s_create_%s_table.up.sql", timestamp, templateInput.Resource.UnderscorePlural()),
 		),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}
 
-	if err = upTmpl.Execute(upFile, input); err != nil {
+	if err = upTmpl.Execute(upFile, templateInput); err != nil {
 		return fmt.Errorf("failed to execute up template: %w", err)
 	}
 
@@ -67,16 +67,16 @@ func (s *Service) generateResourceMigration(_ context.Context, workspaceFolder s
 	//nolint:gosec
 	downFile, err := os.Create(
 		filepath.Join(
-			workspaceFolder,
+			input.WorkspaceFolder,
 			"migrations",
-			fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, input.Resource.UnderscorePlural()),
+			fmt.Sprintf("%s_create_%s_table.down.sql", timestamp, templateInput.Resource.UnderscorePlural()),
 		),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create up file: %w", err)
 	}
 
-	if err = downTmpl.Execute(downFile, input); err != nil {
+	if err = downTmpl.Execute(downFile, templateInput); err != nil {
 		return fmt.Errorf("failed to execute up template: %w", err)
 	}
 

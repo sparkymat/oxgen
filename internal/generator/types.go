@@ -46,6 +46,7 @@ func (t TemplateName) String() string {
 }
 
 type TemplateInput struct {
+	Service     TemplateName
 	Resource    TemplateName
 	SearchField string
 	HasSearch   bool
@@ -61,12 +62,13 @@ type TemplateInputField struct {
 	Updateable bool
 }
 
-func TemplateInputFromNameAndFields(name string, fields []Field, searchField string) TemplateInput {
+func TemplateInputFromGenerateInput(input GenerateInput) TemplateInput {
 	return TemplateInput{
-		SearchField: searchField,
-		HasSearch:   searchField != "",
-		Resource:    TemplateName(name),
-		Fields: lo.Map(fields, func(f Field, _ int) TemplateInputField {
+		Service:     TemplateName(input.Service),
+		SearchField: input.SearchField,
+		HasSearch:   input.SearchField != "",
+		Resource:    TemplateName(input.Name),
+		Fields: lo.Map(input.Fields, func(f Field, _ int) TemplateInputField {
 			return f.TemplateInputField()
 		}),
 	}

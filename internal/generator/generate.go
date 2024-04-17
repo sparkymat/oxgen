@@ -17,7 +17,7 @@ type GenerateInput struct {
 	WorkspaceFolder string
 	Service         string
 	Name            string
-	FieldStrings    []string
+	Fields          []Field
 	SearchField     string
 }
 
@@ -44,19 +44,8 @@ func (s *Service) Generate(
 		return err
 	}
 
-	fields := []Field{}
-
-	for _, fieldString := range input.FieldStrings {
-		field, err := ParseField(input.Name, fieldString)
-		if err != nil {
-			return fmt.Errorf("failed parsing field %s: %w", fieldString, err)
-		}
-
-		fields = append(fields, field)
-	}
-
 	// migration
-	if err := s.generateResourceMigration(ctx, input.WorkspaceFolder, input.Name, fields, input.SearchField); err != nil {
+	if err := s.generateResourceMigration(ctx, input); err != nil {
 		return fmt.Errorf("failed generating resource migration: %w", err)
 	}
 
@@ -70,7 +59,7 @@ func (s *Service) Generate(
 	}
 
 	// add sql methods
-	if err := s.generateSQLMethods(ctx, input.WorkspaceFolder, input.Name, fields, input.SearchField); err != nil {
+	if err := s.generateSQLMethods(ctx, input); err != nil {
 		return fmt.Errorf("failed generating sql methods: %w", err)
 	}
 
@@ -80,7 +69,7 @@ func (s *Service) Generate(
 	}
 
 	// copy new methods to database_iface
-	if err := s.appendDBMethodsToIface(ctx, input.WorkspaceFolder, input.Name, fields, input.SearchField); err != nil {
+	if err := s.appendDBMethodsToIface(ctx, input); err != nil {
 		return fmt.Errorf("failed appending new methods to database_iface.go: %w", err)
 	}
 
@@ -90,6 +79,9 @@ func (s *Service) Generate(
 	}
 
 	// add methods to service interface
+	if err := s.addServiceMethods(ctx, input); err != nil {
+		return fmt.Errorf("failed adding service methods: %w", err)
+	}
 
 	// add new methods to handler
 

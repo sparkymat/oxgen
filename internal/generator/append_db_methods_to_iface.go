@@ -23,21 +23,26 @@ const updateDBMethodTemplate = `
   Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamelcaseSingular }}(ctx context.Context, arg dbx.Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error)
 `
 
-func (s *Service) appendDBMethodsToIface(ctx context.Context, workspaceFolder string, name string, fields []Field, searchField string) error {
-	input := TemplateInputFromNameAndFields(name, fields, searchField)
+func (s *Service) appendDBMethodsToIface(ctx context.Context, input GenerateInput) error {
+	templateInput := TemplateInputFromGenerateInput(input)
 
-	ifaceFilePath := filepath.Join(workspaceFolder, "internal", "service", "database_iface.go")
+	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service")
+	ifaceFilePath := filepath.Join(folderPath, "database_iface.go")
 
-	if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "dbMethods", dbMethodsTemplate, input); err != nil {
+	if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "dbMethods", dbMethodsTemplate, templateInput); err != nil {
 		return err
 	}
 
-	for _, field := range input.Fields {
+	for _, field := range templateInput.Fields {
 		if field.Updateable {
 			if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "updateDbMethod", updateDBMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
 			}
 		}
+	}
+
+	if err := s.runCommand(folderPath, "goimports", "-w", "database_iface.go"); err != nil {
+		return fmt.Errorf("failed running goimports: %w", err)
 	}
 
 	return nil

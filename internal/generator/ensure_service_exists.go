@@ -21,19 +21,15 @@ type Service struct {
 }
 `
 
-func (s *Service) ensureServiceExists(_ context.Context, input GenerateInput) error {
-	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service)
+func (s *Service) ensureServiceExists(_ context.Context, input Input) error {
+	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 	filePath := filepath.Join(folderPath, "service.go")
 
 	if err := s.ensureFolderExists(folderPath); err != nil {
 		return fmt.Errorf("failed to ensure service folder exists: %w", err)
 	}
 
-	templateInput := ServiceTemplateInput{
-		Service: TemplateName(input.Service),
-	}
-
-	if err := s.ensureFileExists(filePath, input.Service, serviceTemplate, templateInput); err != nil {
+	if err := s.ensureFileExists(filePath, input.Service.String(), serviceTemplate, input); err != nil {
 		return fmt.Errorf("failed to ensure service file exists: %w", err)
 	}
 

@@ -3,77 +3,31 @@ package generator
 import (
 	"errors"
 	"strings"
-
-	"github.com/gertd/go-pluralize"
-	"github.com/iancoleman/strcase"
-	"github.com/samber/lo"
 )
 
 var ErrInvalidResourceField = errors.New("invalid resource field")
 
-type TemplateName string
-
-func (t TemplateName) CamelcaseSingular() string {
-	return pluralize.NewClient().Singular(strcase.ToCamel(string(t)))
+type Input struct {
+	WorkspaceFolder string
+	Service         TemplateName
+	Resource        TemplateName
+	SearchField     string
+	HasSearch       bool
+	Fields          []InputField
 }
 
-func (t TemplateName) CamelcasePlural() string {
-	return pluralize.NewClient().Plural(strcase.ToCamel(string(t)))
-}
-
-func (t TemplateName) UnderscoreSingular() string {
-	return pluralize.NewClient().Singular(strcase.ToSnake(string(t)))
-}
-
-func (t TemplateName) UnderscorePlural() string {
-	return pluralize.NewClient().Plural(strcase.ToSnake(string(t)))
-}
-
-func (t TemplateName) Upcase() string {
-	return strings.ToUpper(string(t))
-}
-
-func (t TemplateName) Downcase() string {
-	return strings.ToLower(string(t))
-}
-
-func (t TemplateName) Capitalize() string {
-	return strings.ToUpper(string(t)[0:1]) + string(t)[1:]
-}
-
-func (t TemplateName) String() string {
-	return string(t)
-}
-
-type TemplateInput struct {
-	Service     TemplateName
-	Resource    TemplateName
-	SearchField string
-	HasSearch   bool
-	Fields      []TemplateInputField
-}
-
-type TemplateInputField struct {
+type InputField struct {
 	Service    TemplateName
 	Resource   TemplateName
-	Field      TemplateName
+	Name       TemplateName
 	Type       FieldType
-	Modifiers  string
+	Required   bool
 	Default    string
+	Table      string
+	Unique     bool
 	Updateable bool
+	NotNull    bool
 	Initial    bool
-}
-
-func TemplateInputFromGenerateInput(input GenerateInput) TemplateInput {
-	return TemplateInput{
-		Service:     TemplateName(input.Service),
-		SearchField: input.SearchField,
-		HasSearch:   input.SearchField != "",
-		Resource:    TemplateName(input.Name),
-		Fields: lo.Map(input.Fields, func(f Field, _ int) TemplateInputField {
-			return f.TemplateInputField()
-		}),
-	}
 }
 
 type FieldType string
@@ -89,6 +43,68 @@ const (
 	FieldTypeAttachment FieldType = "attachment"
 	FieldTypeUnknown    FieldType = "unknown"
 )
+
+//nolint:funlen,revive,cyclop
+func ParseField(service string, resource string, fieldString string) (InputField, error) {
+	field := InputField{}
+
+	words := strings.Split(fieldString, ":")
+
+	//nolint:gomnd
+	if len(words) < 2 {
+		return InputField{}, ErrInvalidResourceField
+	}
+
+	field.Service = TemplateName(service)
+	field.Resource = TemplateName(resource)
+	field.Name = TemplateName(words[0])
+	field.Updateable = false
+
+	fieldTypeString := words[1]
+
+	switch fieldTypeString {
+	case "string":
+		field.Type = FieldTypeString
+	case "int":
+		field.Type = FieldTypeInt
+	case "bool":
+		field.Type = FieldTypeBool
+	case "uuid":
+		field.Type = FieldTypeUUID
+	case "references":
+		field.Type = FieldTypeReferences
+	case "attachment":
+		field.Type = FieldTypeAttachment
+		field.Updateable = true
+	case "date":
+		field.Type = FieldTypeDate
+	case "timestamp":
+		field.Type = FieldTypeTimestamp
+	default:
+		return InputField{}, ErrInvalidResourceField
+	}
+
+	for _, word := range words[2:] {
+		switch {
+		case strings.HasPrefix(word, "default="):
+			kvWords := strings.Split(word, "=")
+			field.Default = kvWords[1]
+		case strings.HasPrefix(word, "table="):
+			kvWords := strings.Split(word, "=")
+			field.Table = kvWords[1]
+		case word == "unique":
+			field.Unique = true
+		case word == "not_null":
+			field.NotNull = true
+		case word == "updateable":
+			field.Updateable = true
+		default:
+			return InputField{}, ErrInvalidResourceField
+		}
+	}
+
+	return field, nil
+}
 
 func (f FieldType) SQLType() string {
 	switch f {
@@ -140,143 +156,86 @@ func (f FieldType) GoType() string {
 	}
 }
 
-type Field struct {
-	Service    string
-	Resource   string
-	Name       string
-	FieldType  FieldType
-	Modifiers  string
-	Required   bool
-	Default    *string
-	Updateable bool
-}
+func (f InputField) CreateSQLFragment() string {
+	fragment := "  " + f.Name.String() + " " + f.Type.SQLType()
 
-//nolint:funlen,revive,cyclop
-func ParseField(service string, resource string, fieldString string) (Field, error) {
-	words := strings.Split(fieldString, ":")
-
-	//nolint:gomnd
-	if len(words) < 2 {
-		return Field{}, ErrInvalidResourceField
+	if f.Type == FieldTypeReferences {
+		fragment += (" REFERENCES(" + f.Table + ")")
 	}
 
-	name := words[0]
-	fieldTypeString := words[1]
-	modifiers := ""
-	updateable := false
-
-	var fieldType FieldType
-
-	var defaultValue *string
-
-	switch fieldTypeString {
-	case "string":
-		fieldType = FieldTypeString
-	case "int":
-		fieldType = FieldTypeInt
-	case "bool":
-		fieldType = FieldTypeBool
-	case "uuid":
-		fieldType = FieldTypeUUID
-	case "references":
-		fieldType = FieldTypeReferences
-	case "attachment":
-		fieldType = FieldTypeAttachment
-		updateable = true
-	case "date":
-		fieldType = FieldTypeDate
-	case "timestamp":
-		fieldType = FieldTypeTimestamp
-	default:
-		fieldType = FieldTypeUnknown
-	}
-
-	if fieldType == FieldTypeUnknown {
-		return Field{}, ErrInvalidResourceField
-	}
-
-	for _, word := range words[2:] {
-		switch {
-		case strings.HasPrefix(word, "default="):
-			kvWords := strings.Split(word, "=")
-			w := "DEFAULT "
-
-			if fieldType == FieldTypeString {
-				w += "'" + kvWords[1] + "'"
-			} else {
-				w += kvWords[1]
-			}
-
-			defaultValue = &w
-		case strings.HasPrefix(word, "table="):
-			if modifiers != "" {
-				modifiers += " "
-			}
-
-			kvWords := strings.Split(word, "=")
-			modifiers += "REFERENCES " + kvWords[1] + "(id)"
-		case word == "unique":
-			if modifiers != "" {
-				modifiers += " "
-			}
-
-			modifiers += "UNIQUE"
-		case word == "not_null":
-			if modifiers != "" {
-				modifiers += " "
-			}
-
-			modifiers += "NOT NULL"
-		case word == "updateable":
-			updateable = true
-		default:
-			return Field{}, ErrInvalidResourceField
+	if f.Default != "" {
+		if f.Type == FieldTypeString {
+			fragment += (`"` + f.Default + `"`)
+		} else {
+			fragment += f.Default
 		}
 	}
 
-	return Field{
-		Service:    service,
-		Resource:   resource,
-		Name:       name,
-		Updateable: updateable,
-		FieldType:  fieldType,
-		Modifiers:  modifiers,
-		Default:    defaultValue,
-	}, nil
+	if f.NotNull {
+		fragment += " NOT NULL"
+	}
+
+	if f.Unique {
+		fragment += " UNIQUE"
+	}
+
+	return fragment
 }
 
-func (f Field) TemplateInputField() TemplateInputField {
-	name := strcase.ToSnake(f.Name)
+func (f InputField) CreateParamsGoFragment() string {
+	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType()
 
-	switch f.FieldType {
-	case FieldTypeReferences:
-		name += "_id"
-	case FieldTypeAttachment:
-		name += "_path"
-	case FieldTypeDate:
-	case FieldTypeTimestamp:
-	case FieldTypeUUID:
-	case FieldTypeBool:
-	case FieldTypeInt:
+	return fragment
+}
+
+func (f InputField) CreateAssignParamsGoFragment() string {
+	fragment := "  " + f.Name.CamelcaseSingular() + ": " + f.Name.CamelcaseSingular()
+
+	return fragment
+}
+
+func (f InputField) UpdateAssignParamGoFragment() string {
+	if f.NotNull {
+		return f.Name.String() + " = @" + f.Name.String() + "::" + f.Type.SQLType()
+	}
+
+	return f.Name.String() + " = sqlc.narg('" + f.Name.String() + "')"
+}
+
+func (f InputField) UpdateGoFunctionSignatureParam() string {
+	paramString := "value "
+
+	if !f.NotNull {
+		paramString = "valuePtr *"
+	}
+
+	paramString += f.Type.GoType()
+
+	return paramString
+}
+
+func (f InputField) PgZeroValue() string {
+	switch f.Type {
 	case FieldTypeString:
-	case FieldTypeUnknown:
-	default:
+		return "pgtype.Text{}"
+	case FieldTypeInt:
+		return "pgtype.Int4{}"
+	case FieldTypeDate, FieldTypeTimestamp:
+		return "pgtype.Date{}"
 	}
 
-	return TemplateInputField{
-		Service:    TemplateName(f.Service),
-		Resource:   TemplateName(f.Resource),
-		Field:      TemplateName(name),
-		Updateable: f.Updateable,
-		Initial:    !f.Updateable,
-		Type:       f.FieldType,
-		Modifiers:  f.Modifiers,
-		Default: func() string {
-			if f.Default == nil {
-				return ""
-			}
+	return "unknown"
+}
 
-			return *f.Default
-		}(),
+func (f InputField) PgValue() string {
+	switch f.Type {
+	case FieldTypeString:
+		return "pgtype.Text{String: *valuePtr, Valid: true}"
+	case FieldTypeInt:
+		return "pgtype.Int4{Int32: *valuePtr, Valid: true}"
+	case FieldTypeDate, FieldTypeTimestamp:
+		return "pgtype.Date{Time: *valuePtr, Valid: true}"
 	}
+
+	return "unknown"
 }

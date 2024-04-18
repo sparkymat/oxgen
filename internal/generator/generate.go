@@ -13,14 +13,6 @@ import (
 
 var ErrInvalidResourceName = errors.New("invalid resource name")
 
-type GenerateInput struct {
-	WorkspaceFolder string
-	Service         string
-	Name            string
-	Fields          []Field
-	SearchField     string
-}
-
 func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) error {
 	// check if the workspace folder exists
 	if info, err := os.Stat(workspaceFolder); os.IsNotExist(err) || !info.IsDir() {
@@ -38,9 +30,9 @@ func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) err
 
 func (s *Service) Generate(
 	ctx context.Context,
-	input GenerateInput,
+	input Input,
 ) error {
-	if err := ensureValidResourceName(input.Name); err != nil {
+	if err := ensureValidResourceName(input.Resource.String()); err != nil {
 		return err
 	}
 

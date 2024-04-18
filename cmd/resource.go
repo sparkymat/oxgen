@@ -59,7 +59,7 @@ var resourceCmd = &cobra.Command{
 		name := args[0]
 		fieldStrings := args[1:]
 
-		fields := []generator.Field{}
+		fields := []generator.InputField{}
 
 		for _, fieldString := range fieldStrings {
 			field, err := generator.ParseField(service, name, fieldString)
@@ -70,11 +70,11 @@ var resourceCmd = &cobra.Command{
 			fields = append(fields, field)
 		}
 
-		input := generator.GenerateInput{
+		input := generator.Input{
 			WorkspaceFolder: workspaceFolder,
-			Name:            name,
+			Service:         generator.TemplateName(service),
+			Resource:        generator.TemplateName(name),
 			Fields:          fields,
-			Service:         service,
 			SearchField:     searchField,
 		}
 

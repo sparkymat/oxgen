@@ -9,9 +9,9 @@ import (
 const createSQLMethodTemplate = `
 -- name: Create{{ .Resource.CamelcaseSingular }} :one
 INSERT INTO {{ .Resource.UnderscorePlural }}
-({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Field.String }}{{ end }})
+({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Name.String }}{{ end }})
 VALUES
-({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Field.String }}::{{ $field.Type }}{{ end }})
+({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Name.String }}::{{ $field.Type }}{{ end }})
 RETURNING *;
 `
 
@@ -54,48 +54,46 @@ DELETE FROM {{ .Resource.UnderscorePlural }} t
 `
 
 const updateSQLMethodTemplate = `
--- name: Update{{ .Resource.CamelcaseSingular }}{{ .Field.CamelcaseSingular }} :one
+-- name: Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }} :one
 UPDATE {{ .Resource.UnderscorePlural }} t
-SET {{ .Field.String }} = @{{ .Field.String }}::{{ .Type }}
+SET {{ .UpdateAssignParamGoFragment }}
 WHERE id = @id::uuid
 RETURNING *;
 `
 
-func (s *Service) generateSQLMethods(ctx context.Context, input GenerateInput) error {
-	templateInput := TemplateInputFromGenerateInput(input)
-
+func (s *Service) generateSQLMethods(ctx context.Context, input Input) error {
 	queriesFilePath := filepath.Join(input.WorkspaceFolder, "internal", "database", "queries.sql")
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "create", createSQLMethodTemplate, templateInput); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "create", createSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate create SQL method: %w", err)
 	}
 
 	if input.SearchField != "" {
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "search", searchSQLMethodTemplate, templateInput); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "search", searchSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate search SQL method: %w", err)
 		}
 
-		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countSearched", countSearchedSQLMethodTemplate, templateInput); err != nil {
+		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
 		}
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchById", fetchByIDSQLMethodTemplate, templateInput); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchById SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchByIds", fetchByIDsSQLMethodTemplate, templateInput); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchByIds", fetchByIDsSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate fetchByIds SQL method: %w", err)
 	}
 
-	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "delete", deleteSQLMethodTemplate, templateInput); err != nil {
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "delete", deleteSQLMethodTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate delete SQL method: %w", err)
 	}
 
-	for _, field := range templateInput.Fields {
+	for _, field := range input.Fields {
 		if field.Updateable {
 			if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "update", updateSQLMethodTemplate, field); err != nil {
-				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Field.String(), err)
+				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Name.String(), err)
 			}
 		}
 	}

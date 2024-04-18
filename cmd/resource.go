@@ -62,7 +62,7 @@ var resourceCmd = &cobra.Command{
 		fields := []generator.Field{}
 
 		for _, fieldString := range fieldStrings {
-			field, err := generator.ParseField(name, fieldString)
+			field, err := generator.ParseField(service, name, fieldString)
 			if err != nil {
 				panic(fmt.Errorf("failed parsing field %s: %w", fieldString, err))
 			}

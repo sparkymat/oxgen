@@ -54,12 +54,14 @@ type TemplateInput struct {
 }
 
 type TemplateInputField struct {
+	Service    TemplateName
 	Resource   TemplateName
 	Field      TemplateName
-	Type       string
+	Type       FieldType
 	Modifiers  string
 	Default    string
 	Updateable bool
+	Initial    bool
 }
 
 func TemplateInputFromGenerateInput(input GenerateInput) TemplateInput {
@@ -88,7 +90,7 @@ const (
 	FieldTypeUnknown    FieldType = "unknown"
 )
 
-func (f FieldType) String() string {
+func (f FieldType) SQLType() string {
 	switch f {
 	case FieldTypeString:
 		return "text"
@@ -113,7 +115,33 @@ func (f FieldType) String() string {
 	}
 }
 
+func (f FieldType) GoType() string {
+	switch f {
+	case FieldTypeString:
+		return "string"
+	case FieldTypeInt:
+		return "int32"
+	case FieldTypeBool:
+		return "bool"
+	case FieldTypeUUID:
+		return "uuid.UUID" //nolint:goconst
+	case FieldTypeReferences:
+		return "uuid.UUID"
+	case FieldTypeAttachment:
+		return "string"
+	case FieldTypeDate:
+		return "time.Time"
+	case FieldTypeTimestamp:
+		return "time.Time"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
+	}
+}
+
 type Field struct {
+	Service    string
 	Resource   string
 	Name       string
 	FieldType  FieldType
@@ -124,7 +152,7 @@ type Field struct {
 }
 
 //nolint:funlen,revive,cyclop
-func ParseField(resource string, fieldString string) (Field, error) {
+func ParseField(service string, resource string, fieldString string) (Field, error) {
 	words := strings.Split(fieldString, ":")
 
 	//nolint:gomnd
@@ -207,6 +235,7 @@ func ParseField(resource string, fieldString string) (Field, error) {
 	}
 
 	return Field{
+		Service:    service,
 		Resource:   resource,
 		Name:       name,
 		Updateable: updateable,
@@ -235,10 +264,12 @@ func (f Field) TemplateInputField() TemplateInputField {
 	}
 
 	return TemplateInputField{
+		Service:    TemplateName(f.Service),
 		Resource:   TemplateName(f.Resource),
 		Field:      TemplateName(name),
 		Updateable: f.Updateable,
-		Type:       f.FieldType.String(),
+		Initial:    !f.Updateable,
+		Type:       f.FieldType,
 		Modifiers:  f.Modifiers,
 		Default: func() string {
 			if f.Default == nil {

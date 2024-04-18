@@ -13,7 +13,7 @@ const upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
 
 CREATE TABLE {{ .Resource.UnderscorePlural }} (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-{{range .Fields}}  {{ .Field.String }} {{ .Type }} {{ .Modifiers }}{{ .Default }},
+{{range .Fields}}  {{ .Field.String }} {{ .Type.SQLType }} {{ .Modifiers }}{{ .Default }},
 {{end}}  created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

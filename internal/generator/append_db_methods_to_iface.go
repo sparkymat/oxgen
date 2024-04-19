@@ -7,16 +7,14 @@ import (
 )
 
 const dbMethodsTemplate = `
-  {{if .HasSearch}}
-  CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, query string) (int64, error) 
-  {{end}}
-  Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params dbx.Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error)
+  CountRecent{{ .Resource.CamelcasePlural }}(ctx context.Context) (int64, error) 
+  {{if .HasSearch}}CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, query string) (int64, error) 
+  {{end}}Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params dbx.Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error)
   Delete{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error 
   Fetch{{ .Resource.CamelcaseSingular }}ByID(ctx context.Context, id uuid.UUID) (dbx.{{ .Resource.CamelcaseSingular }}, error) 
   Fetch{{ .Resource.CamelcasePlural }}ByIDs(ctx context.Context, ids []uuid.UUID) ([]dbx.{{ .Resource.CamelcaseSingular }}, error) 
-  {{if .HasSearch}}
-  Search{{ .Resource.CamelcasePlural }}(ctx context.Context, arg dbx.Search{{ .Resource.CamelcasePlural }}Params) ([]dbx.{{ .Resource.CamelcaseSingular }}, error) 
-  {{end}}
+  FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context, arg dbx.Search{{ .Resource.CamelcasePlural }}Params) ([]dbx.{{ .Resource.CamelcaseSingular }}, error){{if .HasSearch}}
+  Search{{ .Resource.CamelcasePlural }}(ctx context.Context, arg dbx.Search{{ .Resource.CamelcasePlural }}Params) ([]dbx.{{ .Resource.CamelcaseSingular }}, error) {{end}}
 `
 
 const updateDBMethodTemplate = `

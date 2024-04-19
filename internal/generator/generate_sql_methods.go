@@ -15,6 +15,21 @@ VALUES
 RETURNING *;
 `
 
+const recentSQLMethodTemplate = `
+-- name: FetchRecent{{ .Resource.CamelcasePlural }} :many
+SELECT *
+  FROM {{ .Resource.UnderscorePlural }} t
+  ORDER BY t.updated_at DESC
+  LIMIT @page_limit::int
+  OFFSET @page_offset::int;
+`
+
+const countRecentSQLMethodTemplate = `
+-- name: CountRecent{{ .Resource.CamelcasePlural }} :one
+SELECT COUNT(id)
+  FROM {{ .Resource.UnderscorePlural }} t;
+`
+
 const searchSQLMethodTemplate = `
 -- name: Search{{ .Resource.CamelcasePlural }} :many
 SELECT *
@@ -76,6 +91,14 @@ func (s *Service) generateSQLMethods(ctx context.Context, input Input) error {
 		if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countSearched", countSearchedSQLMethodTemplate, input); err != nil {
 			return fmt.Errorf("failed to generate count searched SQL method: %w", err)
 		}
+	}
+
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "recent", recentSQLMethodTemplate, input); err != nil {
+		return fmt.Errorf("failed to generate recent SQL method: %w", err)
+	}
+
+	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "countRecent", countRecentSQLMethodTemplate, input); err != nil {
+		return fmt.Errorf("failed to generate count recent SQL method: %w", err)
 	}
 
 	if err := s.appendTemplateToFile(ctx, queriesFilePath, 0, "", "fetchById", fetchByIDSQLMethodTemplate, input); err != nil {

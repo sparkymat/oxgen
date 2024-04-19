@@ -52,6 +52,30 @@ func (s *Service) Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingu
 }
 `
 
+const searchServiceMethodTemplate = `
+package {{ .Service }}
+
+func (s *Service) Search{{ .Resource.CamelcasePlural }}(ctx context.Context, query string, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
+	offset := (pageNumber - 1) * pageSize
+
+	items, err := s.dbx.Search{{ .Resource.CamelcasePlural }}(ctx, dbx.Search{{ .Resource.CamelcasePlural }}Params{
+		Query:      query,
+		PageOffset: offset,
+		PageLimit:  pageSize,
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to search {{ .Resource.CamelcasePlural }}: %w", err)
+	}
+
+	totalCount, err := s.dbx.CountSearched{{ .Resource.CamelcasePlural }}(ctx, query)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to fetch {{ .Resource.CamelcasePlural }} search count: %w", err)
+	}
+
+	return items, totalCount, nil
+}
+`
+
 func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 
@@ -77,8 +101,8 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 	// Updates
 	for _, field := range input.Fields {
 		if field.Updateable {
-			filename := fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular())
-			filePath := filepath.Join(folderPath, filename)
+			filename = fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular())
+			filePath = filepath.Join(folderPath, filename)
 			if err := s.appendTemplateToFile(
 				ctx,
 				filePath,
@@ -94,6 +118,27 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 			if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
 				return fmt.Errorf("failed running goimports: %w", err)
 			}
+		}
+	}
+
+	if input.SearchField != "" {
+		// Search
+		filename = fmt.Sprintf("search_%s.go", input.Resource.UnderscorePlural())
+		filePath = filepath.Join(folderPath, filename)
+		if err := s.appendTemplateToFile(
+			ctx,
+			filePath,
+			0,
+			"",
+			"search",
+			searchServiceMethodTemplate,
+			input,
+		); err != nil {
+			return fmt.Errorf("failed to append search service method: %w", err)
+		}
+
+		if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
+			return fmt.Errorf("failed running goimports: %w", err)
 		}
 	}
 

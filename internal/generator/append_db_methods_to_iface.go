@@ -8,7 +8,7 @@ import (
 
 const dbMethodsTemplate = `
   {{if .HasSearch}}
-  CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, query string) ([]int64, error) 
+  CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, query string) (int64, error) 
   {{end}}
   Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params dbx.Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error)
   Delete{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error 

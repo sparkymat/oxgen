@@ -72,6 +72,7 @@ var resourceCmd = &cobra.Command{
 
 		input := generator.Input{
 			WorkspaceFolder: workspaceFolder,
+			HasSearch:       searchField != "",
 			Service:         generator.TemplateName(service),
 			Resource:        generator.TemplateName(name),
 			Fields:          fields,

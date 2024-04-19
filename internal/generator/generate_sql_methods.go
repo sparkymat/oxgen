@@ -26,7 +26,7 @@ SELECT *
 `
 
 const countSearchedSQLMethodTemplate = `
--- name: CountSearched{{ .Resource.CamelcasePlural }} :many
+-- name: CountSearched{{ .Resource.CamelcasePlural }} :one
 SELECT COUNT(id)
   FROM {{ .Resource.UnderscorePlural }} t
   WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%';

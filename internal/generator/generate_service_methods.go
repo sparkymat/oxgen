@@ -131,7 +131,7 @@ type templateDetails struct {
 	input    any
 }
 
-func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
+func (s *Service) generateServiceMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 
 	files := map[string]templateDetails{

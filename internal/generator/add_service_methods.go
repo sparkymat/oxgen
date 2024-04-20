@@ -125,127 +125,74 @@ func (s *Service) Destroy{{ .Resource.CamelcaseSingular }}(ctx context.Context, 
 }
 `
 
+type templateDetails struct {
+	filename string
+	template string
+	input    any
+}
+
 func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 
-	// Create
-	filename := fmt.Sprintf("create_%s.go", input.Resource.UnderscoreSingular())
-	filePath := filepath.Join(folderPath, filename)
-	if err := s.appendTemplateToFile(
-		ctx,
-		filePath,
-		0,
-		"",
-		"createServiceMethodTemplate",
-		createServiceMethodTemplate,
-		input,
-	); err != nil {
-		return fmt.Errorf("failed to append create service method: %w", err)
+	files := map[string]templateDetails{
+		"createServiceMethodTemplate": {
+			filename: "create_" + input.Resource.UnderscoreSingular() + ".go",
+			template: createServiceMethodTemplate,
+			input:    input,
+		},
+		"recentServiceMethodTemplate": {
+			filename: "fetch_recent_" + input.Resource.UnderscorePlural() + ".go",
+			template: recentServiceMethodTemplate,
+			input:    input,
+		},
+		"fetchServiceMethod": {
+			filename: "fetch_" + input.Resource.UnderscoreSingular() + ".go",
+			template: fetchServiceMethodTemplate,
+			input:    input,
+		},
+		"destroyServiceMethod": {
+			filename: "destroy_" + input.Resource.UnderscoreSingular() + ".go",
+			template: destroyServiceMethodTemplate,
+			input:    input,
+		},
 	}
 
-	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
-		return fmt.Errorf("failed running goimports: %w", err)
+	if input.SearchField != "" {
+		files["searchServiceMethod"] = templateDetails{
+			filename: fmt.Sprintf("search_%s.go", input.Resource.UnderscorePlural()),
+			template: searchServiceMethodTemplate,
+			input:    input,
+		}
 	}
 
-	// Updates
 	for _, field := range input.Fields {
 		if field.Updateable {
-			filename = fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular())
-			filePath = filepath.Join(folderPath, filename)
-			if err := s.appendTemplateToFile(
-				ctx,
-				filePath,
-				0,
-				"",
-				fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular()),
-				updateServiceMethodTemplate,
-				field,
-			); err != nil {
-				return fmt.Errorf("failed to append update service method: %w", err)
-			}
-
-			if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
-				return fmt.Errorf("failed running goimports: %w", err)
+			files[fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular())] = templateDetails{
+				filename: fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular()),
+				template: updateServiceMethodTemplate,
+				input:    field,
 			}
 		}
 	}
 
-	if input.SearchField != "" {
-		// Search
-		filename = fmt.Sprintf("search_%s.go", input.Resource.UnderscorePlural())
-		filePath = filepath.Join(folderPath, filename)
+	for templateName, f := range files {
+		filePath := filepath.Join(folderPath, f.filename)
 		if err := s.appendTemplateToFile(
 			ctx,
 			filePath,
 			0,
 			"",
-			"searchServiceMethod",
-			searchServiceMethodTemplate,
-			input,
+			templateName,
+			f.template,
+			f.input,
 		); err != nil {
-			return fmt.Errorf("failed to append search service method: %w", err)
+			return fmt.Errorf("failed to append service method: %w", err)
 		}
 
-		if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
+		if err := s.runCommand(folderPath, "goimports", "-w", f.filename); err != nil {
 			return fmt.Errorf("failed running goimports: %w", err)
 		}
-	}
 
-	// Fetch recent
-	filename = fmt.Sprintf("fetch_recent_%s.go", input.Resource.UnderscorePlural())
-	filePath = filepath.Join(folderPath, filename)
-	if err := s.appendTemplateToFile(
-		ctx,
-		filePath,
-		0,
-		"",
-		"recentServiceMethod",
-		recentServiceMethodTemplate,
-		input,
-	); err != nil {
-		return fmt.Errorf("failed to append fetch recents service method: %w", err)
-	}
-
-	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
-		return fmt.Errorf("failed running goimports: %w", err)
-	}
-
-	// Fetch by id
-	filename = fmt.Sprintf("fetch_%s.go", input.Resource.UnderscoreSingular())
-	filePath = filepath.Join(folderPath, filename)
-	if err := s.appendTemplateToFile(
-		ctx,
-		filePath,
-		0,
-		"",
-		"fetchServiceMethod",
-		fetchServiceMethodTemplate,
-		input,
-	); err != nil {
-		return fmt.Errorf("failed to append fetch service method: %w", err)
-	}
-
-	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
-		return fmt.Errorf("failed running goimports: %w", err)
-	}
-
-	// Destroy
-	filename = fmt.Sprintf("destroy_%s.go", input.Resource.UnderscoreSingular())
-	filePath = filepath.Join(folderPath, filename)
-	if err := s.appendTemplateToFile(
-		ctx,
-		filePath,
-		0,
-		"",
-		"destroyServiceMethod",
-		destroyServiceMethodTemplate,
-		input,
-	); err != nil {
-		return fmt.Errorf("failed to append destroy service method: %w", err)
-	}
-
-	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
-		return fmt.Errorf("failed running goimports: %w", err)
 	}
 
 	return nil

@@ -75,6 +75,9 @@ func (s *Service) Generate(
 	}
 
 	// add methods to service interface
+	if err := s.addServiceMethodsToIface(ctx, input); err != nil {
+		return fmt.Errorf("failed adding service methods to interface: %w", err)
+	}
 
 	// add new methods to handler
 

@@ -99,6 +99,19 @@ func (s *Service) FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context
 }
 `
 
+const fetchServiceMethodTemplate = `
+package {{ .Service }}
+
+func (s *Service) Fetch{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID)(dbx.{{ .Resource.CamelcaseSingular }}, error) {
+	item, err := s.dbx.Fetch{{ .Resource.CamelcaseSingular }}ByID(ctx, id)
+	if err != nil {
+		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to fetch {{ .Resource.CamelcaseSingular }}: %w", err)
+	}
+
+	return item, nil
+}
+`
+
 func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 
@@ -110,7 +123,7 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 		filePath,
 		0,
 		"",
-		"create",
+		"createServiceMethodTemplate",
 		createServiceMethodTemplate,
 		input,
 	); err != nil {
@@ -131,7 +144,7 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 				filePath,
 				0,
 				"",
-				fmt.Sprintf("update_%s", field.Name.String()),
+				fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular()),
 				updateServiceMethodTemplate,
 				field,
 			); err != nil {
@@ -153,7 +166,7 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 			filePath,
 			0,
 			"",
-			"search",
+			"searchServiceMethod",
 			searchServiceMethodTemplate,
 			input,
 		); err != nil {
@@ -173,7 +186,7 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 		filePath,
 		0,
 		"",
-		"recent",
+		"recentServiceMethod",
 		recentServiceMethodTemplate,
 		input,
 	); err != nil {
@@ -183,5 +196,25 @@ func (s *Service) addServiceMethods(ctx context.Context, input Input) error {
 	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
 		return fmt.Errorf("failed running goimports: %w", err)
 	}
+
+	// Fetch by id
+	filename = fmt.Sprintf("fetch_%s.go", input.Resource.UnderscoreSingular())
+	filePath = filepath.Join(folderPath, filename)
+	if err := s.appendTemplateToFile(
+		ctx,
+		filePath,
+		0,
+		"",
+		"fetchServiceMethod",
+		fetchServiceMethodTemplate,
+		input,
+	); err != nil {
+		return fmt.Errorf("failed to append fetch service method: %w", err)
+	}
+
+	if err := s.runCommand(folderPath, "goimports", "-w", filename); err != nil {
+		return fmt.Errorf("failed running goimports: %w", err)
+	}
+
 	return nil
 }

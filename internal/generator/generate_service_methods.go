@@ -52,6 +52,42 @@ func (s *Service) Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingu
 }
 `
 
+const updateAttachmentServiceMethodTemplate = `
+package {{ .Service }}
+
+func (s *Service) Upload{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }}(ctx context.Context, id uuid.UUID, filename string, attachmentFile io.Reader) (dbx.{{ .Resource.CamelcaseSingular }}, error) {
+	folderPath := path.Join(s.storageFolder, "{{ .Resource.UnderscoreSingular }}", fmt.Sprintf("%s", id.String()))
+
+	if err := os.MkdirAll(folderPath, 0o755); err != nil { //nolint:gomnd
+		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to create {{ .Resource.UnderscoreSingular }} folder. err: %w", err)
+	}
+
+	filePath := path.Join(folderPath, filename)
+
+	data, err := io.ReadAll(attachmentFile)
+	if err != nil {
+		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to read attachment file: %w", err)
+	}
+
+	//nolint:gomnd
+	if err = os.WriteFile(filePath, data, 0o600); err != nil {
+		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to write attachment file: %w", err)
+	}
+
+  input := dbx.Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }}Params{
+    ID: id,
+    {{ .Name.CamelcaseSingular }}: pgtype.Text{String: fmt.Sprintf("/{{ .Resource.UnderscoreSingular }}/%s/%s", id.String(), filename), Valid: true},
+  }
+
+	item, err := s.dbx.Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }}(ctx, input)
+  if err != nil {
+		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to update artist photo: %w", err)
+	}
+
+	return item, nil
+}
+`
+
 const searchServiceMethodTemplate = `
 package {{ .Service }}
 
@@ -167,10 +203,18 @@ func (s *Service) generateServiceMethods(ctx context.Context, input Input) error
 
 	for _, field := range input.Fields {
 		if field.Updateable {
-			files[fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular())] = templateDetails{
-				filename: fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular()),
-				template: updateServiceMethodTemplate,
-				input:    field,
+			if field.Type == FieldTypeAttachment {
+				files[fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular())] = templateDetails{
+					filename: fmt.Sprintf("upload_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular()),
+					template: updateAttachmentServiceMethodTemplate,
+					input:    field,
+				}
+			} else {
+				files[fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular())] = templateDetails{
+					filename: fmt.Sprintf("update_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular()),
+					template: updateServiceMethodTemplate,
+					input:    field,
+				}
 			}
 		}
 	}

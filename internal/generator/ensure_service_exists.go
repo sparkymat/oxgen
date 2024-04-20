@@ -12,11 +12,15 @@ type ServiceTemplateInput struct {
 
 const serviceTemplate = `package {{ .Service.Downcase }}
 
-func New(dbx service.DatabaseProvider) *Service {
-  return &Service{dbx: dbx}
+func New(storageFolder string, dbx service.DatabaseProvider) *Service {
+  return &Service{
+    storageFolder: storageFolder,
+    dbx: dbx,
+  }
 }
 
 type Service struct {
+  storageFolder string
   dbx service.DatabaseProvider
 }
 `

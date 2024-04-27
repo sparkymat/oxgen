@@ -362,3 +362,68 @@ func (f InputField) PgValue() string {
 
 	return "unknown"
 }
+
+func (f FieldType) TypescriptType() string {
+	switch f {
+	case FieldTypeString:
+		return "string"
+	case FieldTypeInt:
+		return "number"
+	case FieldTypeBool:
+		return "boolean"
+	case FieldTypeUUID:
+		return "string"
+	case FieldTypeReferences:
+		return "string"
+	case FieldTypeAttachment:
+		return "string"
+	case FieldTypeDate:
+		return "string"
+	case FieldTypeTimestamp:
+		return "string"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
+	}
+}
+
+func (f InputField) FrontendModelDeclaration() string {
+	str := "  public " + f.Name.LowerCamelcaseSingular()
+
+	if !f.NotNull {
+		str += "?"
+	}
+
+	str += ": " + f.Type.TypescriptType() + ";"
+
+	return str
+}
+
+func (f InputField) FrontendModelAssignment() string {
+	str := ""
+
+	if !f.NotNull {
+		str += "\n    if (json." + f.Name.LowerCamelcaseSingular() + ") {\n      "
+	}
+
+	str += "this." + f.Name.LowerCamelcaseSingular() + " = "
+
+	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+		str += "dayjs.utc("
+	}
+
+	str += "json." + f.Name.LowerCamelcaseSingular()
+
+	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+		str += ")"
+	}
+
+	str += ";"
+
+	if !f.NotNull {
+		str += "\n    }"
+	}
+
+	return str
+}

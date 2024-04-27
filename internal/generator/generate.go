@@ -94,6 +94,11 @@ func (s *Service) Generate(
 		return fmt.Errorf("failed appending routes: %w", err)
 	}
 
+	// add frontend model
+	if err := s.generateFrontendModel(ctx, input); err != nil {
+		return fmt.Errorf("failed generating frontend model: %w", err)
+	}
+
 	return nil
 }
 

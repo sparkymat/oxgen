@@ -179,6 +179,17 @@ package api
 
 func {{ .Resource.CamelcasePlural }}Show(s internal.Services) echo.HandlerFunc {
   return wrapWithAuthForMember(func(c echo.Context, _ dbx.User, id uuid.UUID) error {
+    item, err := s.{{ .Service.String }}.Fetch{{ .Resource.CamelcaseSingular }}(
+			c.Request().Context(),
+			id,
+		)
+		if err != nil {
+			return renderError(c, http.StatusInternalServerError, "failed to fetch {{ .Resource.LowerCamelcaseSingular }}", err)
+		}
+
+		presentedItem := presenter.{{ .Resource.CamelcaseSingular }}FromModel(item)
+
+		return c.JSON(http.StatusOK, presentedItem)
   })
 }
 `
@@ -188,6 +199,11 @@ package api
 
 func {{ .Resource.CamelcasePlural }}Destroy(s internal.Services) echo.HandlerFunc {
   return wrapWithAuthForMember(func(c echo.Context, _ dbx.User, id uuid.UUID) error {
+		if err := s.{{ .Service.String }}.Destroy{{ .Resource.CamelcaseSingular }}(c.Request().Context(), id); err != nil {
+			return renderError(c, http.StatusInternalServerError, "failed to destroy {{ .Resource.LowerCamelcaseSingular }}", err)
+		}
+
+		return c.NoContent(http.StatusOK)
   })
 }
 `

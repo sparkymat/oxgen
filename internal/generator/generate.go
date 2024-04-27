@@ -90,6 +90,9 @@ func (s *Service) Generate(
 	}
 
 	// add new methods to routes
+	if err := s.appendRoutes(ctx, input); err != nil {
+		return fmt.Errorf("failed appending routes: %w", err)
+	}
 
 	return nil
 }

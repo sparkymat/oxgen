@@ -106,6 +106,30 @@ type {{ .Resource.CamelcasePlural }}SearchResponse struct {
 
 func {{ .Resource.CamelcasePlural }}Search(s internal.Services) echo.HandlerFunc {
   return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+		pageSize, pageNumber, err := parsePaginationParams(c)
+		if err != nil {
+			return renderError(c, http.StatusBadRequest, "invalid pagination params", err)
+		}
+
+		query := c.QueryParam("query")
+
+		items, totalCount, err := s.{{ .Service.String }}.Search{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		if err != nil {
+			return renderError(c, http.StatusInternalServerError, "failed to search {{ .Resource.LowerCamelcasePlural }}", err)
+		}
+
+		presentedItems := lo.Map(items, func(i dbx.{{ .Resource.CamelcaseSingular }}, _ int) presenter.{{ .Resource.CamelcaseSingular }} {
+			return presenter.{{ .Resource.CamelcaseSingular }}FromModel(i)
+		})
+
+		response := {{ .Resource.CamelcasePlural }}SearchResponse{
+			Items:      presentedItems,
+			PageSize:   int(pageSize),
+			PageNumber: int(pageNumber),
+			TotalCount: int(totalCount),
+		}
+
+		return c.JSON(http.StatusOK, response)
   })
 }
 `
@@ -113,8 +137,39 @@ func {{ .Resource.CamelcasePlural }}Search(s internal.Services) echo.HandlerFunc
 const recentHandlerMethodTemplate = `
 package api
 
+type {{ .Resource.CamelcasePlural }}FetchRecentResponse struct {
+  Items []presenter.{{ .Resource.CamelcaseSingular }} ` + "`json:\"items\"`" + `
+  TotalCount int ` + "`json:\"totalCount\"`" + `
+  PageSize int ` + "`json:\"pageSize\"`" + `
+  PageNumber int ` + "`json:\"pageNumber\"`" + `
+}
+
 func {{ .Resource.CamelcasePlural }}FetchRecent(s internal.Services) echo.HandlerFunc {
   return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+		pageSize, pageNumber, err := parsePaginationParams(c)
+		if err != nil {
+			return renderError(c, http.StatusBadRequest, "invalid pagination params", err)
+		}
+
+		query := c.QueryParam("query")
+
+		items, totalCount, err := s.{{ .Service.String }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		if err != nil {
+			return renderError(c, http.StatusInternalServerError, "failed to fetch recent {{ .Resource.LowerCamelcasePlural }}", err)
+		}
+
+		presentedItems := lo.Map(items, func(i dbx.{{ .Resource.CamelcaseSingular }}, _ int) presenter.{{ .Resource.CamelcaseSingular }} {
+			return presenter.{{ .Resource.CamelcaseSingular }}FromModel(i)
+		})
+
+		response := {{ .Resource.CamelcasePlural }}FetchRecentResponse{
+			Items:      presentedItems,
+			PageSize:   int(pageSize),
+			PageNumber: int(pageNumber),
+			TotalCount: int(totalCount),
+		}
+
+		return c.JSON(http.StatusOK, response)
   })
 }
 `

@@ -9,6 +9,14 @@ import (
 
 type TemplateName string
 
+func (t TemplateName) LowerCamelcaseSingular() string {
+	return pluralize.NewClient().Singular(strcase.ToLowerCamel(string(t)))
+}
+
+func (t TemplateName) LowerCamelcasePlural() string {
+	return pluralize.NewClient().Plural(strcase.ToLowerCamel(string(t)))
+}
+
 func (t TemplateName) CamelcaseSingular() string {
 	return pluralize.NewClient().Singular(strcase.ToCamel(string(t)))
 }

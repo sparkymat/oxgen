@@ -16,7 +16,7 @@ type Create{{ .Resource.CamelcaseSingular }}Params struct {
 
 func (s *Service) Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error) {
   input := dbx.Create{{ .Resource.CamelcaseSingular }}Params{
-{{range .Fields }}{{if .Initial}}{{ .CrateAssignParamsGoFragment }},{{end}}
+{{range .Fields }}{{if .Initial}}{{ .CreateAssignParamsGoFragment }},{{end}}
 {{end}}
   }
 
@@ -52,7 +52,7 @@ func (s *Service) Update{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingu
 }
 `
 
-const updateAttachmentServiceMethodTemplate = `
+const uploadAttachmentServiceMethodTemplate = `
 package {{ .Service }}
 
 func (s *Service) Upload{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }}(ctx context.Context, id uuid.UUID, filename string, attachmentFile io.Reader) (dbx.{{ .Resource.CamelcaseSingular }}, error) {
@@ -206,7 +206,7 @@ func (s *Service) generateServiceMethods(ctx context.Context, input Input) error
 			if field.Type == FieldTypeAttachment {
 				files[fmt.Sprintf("update%sServiceMethod", field.Name.CamelcaseSingular())] = templateDetails{
 					filename: fmt.Sprintf("upload_%s_%s.go", field.Resource.UnderscoreSingular(), field.Name.UnderscoreSingular()),
-					template: updateAttachmentServiceMethodTemplate,
+					template: uploadAttachmentServiceMethodTemplate,
 					input:    field,
 				}
 			} else {

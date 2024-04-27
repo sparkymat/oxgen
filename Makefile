@@ -5,7 +5,9 @@ clean:
 	rm -f oxgen
 	rm -rf webapp/migrations
 	rm -rf webapp/internal/service
-	rm -rf webapp/internal/handler
+	rm -rf webapp/internal/handler/*.go
+	rm -rf webapp/internal/handler/api/*_*.go
+	rm -rf webapp/internal/handler/api/presenter/*.go
 	mkdir -p webapp/internal/service
 	mkdir -p webapp/internal/handler
 	echo > webapp/internal/database/queries.sql

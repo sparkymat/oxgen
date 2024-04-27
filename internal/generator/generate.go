@@ -79,7 +79,15 @@ func (s *Service) Generate(
 		return fmt.Errorf("failed adding service methods to interface: %w", err)
 	}
 
+	// add presenter
+	if err := s.generatePresenter(ctx, input); err != nil {
+		return fmt.Errorf("failed generating presenter: %w", err)
+	}
+
 	// add new methods to handler
+	if err := s.generateHandlerMethods(ctx, input); err != nil {
+		return fmt.Errorf("failed adding handler methods: %w", err)
+	}
 
 	// add new methods to routes
 

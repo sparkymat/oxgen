@@ -3,6 +3,8 @@ package generator
 import (
 	"errors"
 	"strings"
+
+	"github.com/iancoleman/strcase"
 )
 
 var ErrInvalidResourceField = errors.New("invalid resource field")
@@ -27,7 +29,6 @@ type InputField struct {
 	Unique     bool
 	Updateable bool
 	NotNull    bool
-	Initial    bool
 }
 
 type FieldType string
@@ -156,6 +157,39 @@ func (f FieldType) GoType() string {
 	}
 }
 
+func (f FieldType) PresenterGoType() string {
+	switch f {
+	case FieldTypeString:
+		return "string"
+	case FieldTypeInt:
+		return "int32"
+	case FieldTypeBool:
+		return "bool"
+	case FieldTypeUUID:
+		return "string"
+	case FieldTypeReferences:
+		return "string"
+	case FieldTypeAttachment:
+		return "string"
+	case FieldTypeDate:
+		return "string"
+	case FieldTypeTimestamp:
+		return "string"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
+	}
+}
+
+func (f InputField) Initial() bool {
+	return f.NotNull || !f.Updateable
+}
+
+func (f InputField) JsonName() string {
+	return strcase.ToLowerCamel(f.Name.String())
+}
+
 func (f InputField) CreateSQLFragment() string {
 	fragment := "  " + f.Name.String() + " " + f.Type.SQLType()
 
@@ -182,8 +216,30 @@ func (f InputField) CreateSQLFragment() string {
 	return fragment
 }
 
+func (f InputField) JsonTag() string {
+	return "`json:\"" + f.JsonName() + "\"`"
+}
+
 func (f InputField) CreateParamsGoFragment() string {
 	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType()
+
+	return fragment
+}
+
+func (f InputField) CreateRequestGoFragment() string {
+	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType() + " " + f.JsonTag()
+
+	return fragment
+}
+
+func (f InputField) PresenterGoFragment() string {
+	fragment := "  " + f.Name.CamelcaseSingular() + " "
+
+	if !f.NotNull {
+		fragment += "*"
+	}
+
+	fragment += (f.Type.PresenterGoType() + " " + f.JsonTag())
 
 	return fragment
 }
@@ -212,6 +268,73 @@ func (f InputField) UpdateGoFunctionSignatureParam() string {
 	paramString += f.Type.GoType()
 
 	return paramString
+}
+
+func (f InputField) PresenterAssignment() string {
+	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+		str := "if m." + f.Name.CamelcaseSingular() + ".Valid {\n"
+
+		str += "v := m." + f.Name.CamelcaseSingular() + ".Time"
+
+		switch f.Type {
+		case FieldTypeDate:
+			str += ".Format(\"2006-01-02\")"
+		case FieldTypeTimestamp:
+			str += ".Format(time.RFC3339)"
+		default:
+		}
+
+		str += "\n"
+
+		str += "item." + f.Name.CamelcaseSingular() + " = &v\n"
+		str += "}\n\n"
+
+		return str
+	}
+
+	str := ""
+
+	if !f.NotNull {
+		str += "\nif m." + f.Name.CamelcaseSingular() + ".Valid {\n"
+	}
+
+	str += "  item." + f.Name.CamelcaseSingular() + " = "
+
+	if !f.NotNull {
+		str += "&"
+	}
+
+	str += ("m." + f.Name.CamelcaseSingular())
+	if !f.NotNull {
+		str += ("." + f.PgType())
+	}
+
+	str += "\n"
+
+	if !f.NotNull {
+		str += "\n}\n\n"
+	}
+
+	return str
+}
+
+func (f InputField) PgType() string {
+	switch f.Type {
+	case FieldTypeString:
+		return "String"
+	case FieldTypeAttachment:
+		return "String"
+	case FieldTypeInt:
+		return "Int32"
+	case FieldTypeBool:
+		return "Boolean"
+	case FieldTypeTimestamp:
+		return "Time"
+	case FieldTypeDate:
+		return "Time"
+	}
+
+	return "unknown"
 }
 
 func (f InputField) PgZeroValue() string {

@@ -1,3 +1,4 @@
+//nolint:revive
 package generator
 
 import (
@@ -28,10 +29,8 @@ func (*Service) CheckValidProject(_ context.Context, workspaceFolder string) err
 	return nil
 }
 
-func (s *Service) Generate(
-	ctx context.Context,
-	input Input,
-) error {
+//nolint:funlen,cyclop
+func (s *Service) Generate(ctx context.Context, input Input) error {
 	if err := ensureValidResourceName(input.Resource.String()); err != nil {
 		return err
 	}

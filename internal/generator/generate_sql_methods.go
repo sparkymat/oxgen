@@ -1,3 +1,4 @@
+//nolint:revive
 package generator
 
 import (
@@ -76,6 +77,7 @@ WHERE id = @id::uuid
 RETURNING *;
 `
 
+//nolint:cyclop
 func (s *Service) generateSQLMethods(ctx context.Context, input Input) error {
 	queriesFilePath := filepath.Join(input.WorkspaceFolder, "internal", "database", "queries.sql")
 

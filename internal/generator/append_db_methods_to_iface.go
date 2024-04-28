@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (
@@ -25,12 +26,14 @@ func (s *Service) appendDBMethodsToIface(ctx context.Context, input Input) error
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service")
 	ifaceFilePath := filepath.Join(folderPath, "database_iface.go")
 
+	//nolint:gomnd
 	if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "dbMethods", dbMethodsTemplate, input); err != nil {
 		return err
 	}
 
 	for _, field := range input.Fields {
 		if field.Updateable {
+			//nolint:gomnd
 			if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "updateDbMethod", updateDBMethodTemplate, field); err != nil {
 				return fmt.Errorf("failed to generate update %s SQL method: %w", field.Name.String(), err)
 			}

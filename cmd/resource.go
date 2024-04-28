@@ -16,7 +16,7 @@ var ErrUncommittedChanges = errors.New("uncommitted changes")
 
 var skipGitCheck bool //nolint:gochecknoglobals
 
-var service string //nolint:checknoglobals
+var service string //nolint:gochecknoglobals
 
 var workspaceFolder string //nolint:gochecknoglobals
 
@@ -91,7 +91,7 @@ func init() {
 	resourceCmd.Flags().StringVarP(&workspaceFolder, "path", "p", ".", "Path to workspace")
 	resourceCmd.Flags().StringVarP(&searchField, "query-field", "q", "", "Field to search by")
 	resourceCmd.Flags().StringVarP(&service, "service", "s", "", "Service that the resource belongs to")
-	resourceCmd.MarkFlagRequired("service")
+	resourceCmd.MarkFlagRequired("service") //nolint:errcheck,gosec
 
 	rootCmd.AddCommand(resourceCmd)
 }

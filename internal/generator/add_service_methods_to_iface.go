@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (
@@ -42,17 +43,21 @@ func (s *Service) addServiceMethodsToIface(
 		return fmt.Errorf("failed to ensure service iface file exists: %w", err)
 	}
 
+	//nolint:gomnd
 	if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "serviceMethods", serviceMethodsIfaceTemplate, input); err != nil {
 		return err
 	}
 
 	for _, field := range input.Fields {
+		//nolint:nestif
 		if field.Updateable {
 			if field.Type == FieldTypeAttachment {
+				//nolint:gomnd
 				if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "uploadAttachmentServiceMethod", uploadAttachmentServiceMethodsIfaceTemplate, field); err != nil {
 					return fmt.Errorf("failed to add upload attachment %s service method to iface file: %w", field.Name.String(), err)
 				}
 			} else {
+				//nolint:gomnd
 				if err := s.appendTemplateToFile(ctx, ifaceFilePath, 2, "}", "updateServiceMethod", updateServiceMethodsIfaceTemplate, field); err != nil {
 					return fmt.Errorf("failed to add update %s service method to iface file: %w", field.Name.String(), err)
 				}

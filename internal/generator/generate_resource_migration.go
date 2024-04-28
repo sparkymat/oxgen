@@ -40,7 +40,6 @@ func (s *Service) generateResourceMigration(_ context.Context, input Input) erro
 		return fmt.Errorf("failed to parse up template: %w", err)
 	}
 
-	//nolint:gosec
 	upFile, err := os.Create(
 		filepath.Join(
 			input.WorkspaceFolder,
@@ -62,7 +61,6 @@ func (s *Service) generateResourceMigration(_ context.Context, input Input) erro
 		return fmt.Errorf("failed to parse down template: %w", err)
 	}
 
-	//nolint:gosec
 	downFile, err := os.Create(
 		filepath.Join(
 			input.WorkspaceFolder,

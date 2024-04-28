@@ -64,13 +64,13 @@ func ParseField(service string, resource string, fieldString string) (InputField
 	fieldTypeString := words[1]
 
 	switch fieldTypeString {
-	case "string":
+	case "string": //nolint:goconst
 		field.Type = FieldTypeString
 	case "int":
 		field.Type = FieldTypeInt
-	case "bool":
+	case "bool": //nolint:goconst
 		field.Type = FieldTypeBool
-	case "uuid":
+	case "uuid": //nolint:goconst
 		field.Type = FieldTypeUUID
 	case "references":
 		field.Type = FieldTypeReferences
@@ -116,7 +116,7 @@ func (f FieldType) SQLType() string {
 	case FieldTypeBool:
 		return "bool"
 	case FieldTypeUUID:
-		return "uuid" //nolint:goconst
+		return "uuid"
 	case FieldTypeReferences:
 		return "uuid"
 	case FieldTypeAttachment:
@@ -126,7 +126,7 @@ func (f FieldType) SQLType() string {
 	case FieldTypeTimestamp:
 		return "timestamp"
 	case FieldTypeUnknown:
-		return "unknown"
+		return "unknown" //nolint:goconst
 	default:
 		return "unknown"
 	}
@@ -186,7 +186,7 @@ func (f InputField) Initial() bool {
 	return f.NotNull || !f.Updateable
 }
 
-func (f InputField) JsonName() string {
+func (f InputField) JSONName() string {
 	return strcase.ToLowerCamel(f.Name.String())
 }
 
@@ -216,8 +216,8 @@ func (f InputField) CreateSQLFragment() string {
 	return fragment
 }
 
-func (f InputField) JsonTag() string {
-	return "`json:\"" + f.JsonName() + "\"`"
+func (f InputField) JSONTag() string {
+	return "`json:\"" + f.JSONName() + "\"`"
 }
 
 func (f InputField) CreateParamsGoFragment() string {
@@ -227,7 +227,7 @@ func (f InputField) CreateParamsGoFragment() string {
 }
 
 func (f InputField) CreateRequestGoFragment() string {
-	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType() + " " + f.JsonTag()
+	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType() + " " + f.JSONTag()
 
 	return fragment
 }
@@ -239,7 +239,7 @@ func (f InputField) PresenterGoFragment() string {
 		fragment += "*"
 	}
 
-	fragment += (f.Type.PresenterGoType() + " " + f.JsonTag())
+	fragment += (f.Type.PresenterGoType() + " " + f.JSONTag())
 
 	return fragment
 }
@@ -281,6 +281,7 @@ func (f InputField) PresenterAssignment() string {
 			str += ".Format(\"2006-01-02\")"
 		case FieldTypeTimestamp:
 			str += ".Format(time.RFC3339)"
+		case FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeReferences, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
 		default:
 		}
 
@@ -332,35 +333,51 @@ func (f InputField) PgType() string {
 		return "Time"
 	case FieldTypeDate:
 		return "Time"
+	case FieldTypeUUID, FieldTypeReferences:
+		return "uuid.UUID"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
 	}
-
-	return "unknown"
 }
 
 func (f InputField) PgZeroValue() string {
 	switch f.Type {
-	case FieldTypeString:
+	case FieldTypeString, FieldTypeAttachment:
 		return "pgtype.Text{}"
 	case FieldTypeInt:
 		return "pgtype.Int4{}"
 	case FieldTypeDate, FieldTypeTimestamp:
 		return "pgtype.Date{}"
+	case FieldTypeUUID, FieldTypeReferences:
+		return "uuid.NilUUID"
+	case FieldTypeBool:
+		return "unknown"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
 	}
-
-	return "unknown"
 }
 
 func (f InputField) PgValue() string {
 	switch f.Type {
-	case FieldTypeString:
+	case FieldTypeString, FieldTypeAttachment:
 		return "pgtype.Text{String: *valuePtr, Valid: true}"
 	case FieldTypeInt:
 		return "pgtype.Int4{Int32: *valuePtr, Valid: true}"
 	case FieldTypeDate, FieldTypeTimestamp:
 		return "pgtype.Date{Time: *valuePtr, Valid: true}"
+	case FieldTypeUUID, FieldTypeReferences:
+		return "uuid.MustParse(*valuePtr)"
+	case FieldTypeBool:
+		return "unknown"
+	case FieldTypeUnknown:
+		return "unknown"
+	default:
+		return "unknown"
 	}
-
-	return "unknown"
 }
 
 func (f FieldType) TypescriptType() string {

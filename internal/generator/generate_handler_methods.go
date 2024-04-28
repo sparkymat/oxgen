@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (
@@ -208,6 +209,7 @@ func {{ .Resource.CamelcasePlural }}Destroy(s internal.Services) echo.HandlerFun
 }
 `
 
+//nolint:funlen
 func (s *Service) generateHandlerMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "handler", "api")
 

@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (
@@ -167,6 +168,7 @@ type templateDetails struct {
 	input    any
 }
 
+//nolint:funlen
 func (s *Service) generateServiceMethods(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 
@@ -236,7 +238,6 @@ func (s *Service) generateServiceMethods(ctx context.Context, input Input) error
 		if err := s.runCommand(folderPath, "goimports", "-w", f.filename); err != nil {
 			return fmt.Errorf("failed running goimports: %w", err)
 		}
-
 	}
 
 	return nil

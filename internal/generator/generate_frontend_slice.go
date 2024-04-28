@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (

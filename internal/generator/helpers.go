@@ -31,12 +31,12 @@ func (*Service) ensureFolderExists(path string) error {
 
 func (*Service) ensureFileExists(path string, templateName string, templateString string, templateInput any) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		file, err := os.Create(path)
+		file, err := os.Create(path) //nolint:gosec
 		if err != nil {
 			return fmt.Errorf("failed to create file: %w", err)
 		}
 
-		defer file.Close()
+		defer file.Close() //nolint:errcheck
 
 		tmpl, err := template.New(templateName).Parse(templateString)
 		if err != nil {
@@ -90,7 +90,7 @@ func (*Service) appendTemplateToFile(
 			return fmt.Errorf("failed to open queries file: %w", err)
 		}
 
-		defer queriesFile.Close()
+		defer queriesFile.Close() //nolint:errcheck
 
 		if _, err = queriesFile.Seek(int64(-reverseOffset), io.SeekEnd); err != nil {
 			return fmt.Errorf("failed to seek to the end of the file: %w", err)

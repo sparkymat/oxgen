@@ -1,3 +1,4 @@
+//nolint:lll,revive
 package generator
 
 import (
@@ -28,17 +29,21 @@ func (s *Service) appendRoutes(ctx context.Context, input Input) error {
 
 	filePath := filepath.Join(folderPath, filename)
 
+	//nolint:gomnd
 	if err := s.appendTemplateToFile(ctx, filePath, 2, "}", "routeMethods", routeMethodsTemplate, input); err != nil {
 		return fmt.Errorf("failed to generate route methods: %w", err)
 	}
 
 	for _, field := range input.Fields {
+		//nolint:nestif
 		if field.Updateable {
 			if field.Type == FieldTypeAttachment {
+				//nolint:gomnd
 				if err := s.appendTemplateToFile(ctx, filePath, 2, "}", "uploadRouteMethod", uploadRouteMethodTemplate, field); err != nil {
 					return fmt.Errorf("failed to generate update %s route: %w", field.Name.String(), err)
 				}
 			} else {
+				//nolint:gomnd
 				if err := s.appendTemplateToFile(ctx, filePath, 2, "}", "updateRouteMethod", updateRouteMethodTemplate, field); err != nil {
 					return fmt.Errorf("failed to generate update %s route: %w", field.Name.String(), err)
 				}

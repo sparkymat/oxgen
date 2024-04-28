@@ -44,7 +44,7 @@ func (s *Service) generateFrontendModel(ctx context.Context, input Input) error 
 		return fmt.Errorf("failed to ensure frontend models folder exists: %w", err)
 	}
 
-	filename := input.Resource.UnderscoreSingular() + ".ts"
+	filename := input.Resource.CamelcaseSingular() + ".ts"
 
 	filePath := filepath.Join(folderPath, filename)
 	if err := s.appendTemplateToFile(

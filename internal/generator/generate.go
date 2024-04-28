@@ -99,6 +99,11 @@ func (s *Service) Generate(
 		return fmt.Errorf("failed generating frontend model: %w", err)
 	}
 
+	// add frontend model
+	if err := s.generateFrontendSlice(ctx, input); err != nil {
+		return fmt.Errorf("failed generating frontend slice: %w", err)
+	}
+
 	return nil
 }
 

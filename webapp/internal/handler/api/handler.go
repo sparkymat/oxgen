@@ -59,18 +59,18 @@ func wrapWithAuthForMember(handlerFunc authenticatedMemberHandlerFunc) echo.Hand
 
 //nolint:revive
 func parsePaginationParams(c echo.Context) (int32, int32, error) {
-	pageSizeString := c.QueryParam("page_size")
+	pageSizeString := c.QueryParam("pageSize")
 
 	pageSize, err := strconv.ParseInt(pageSizeString, 10, 32)
 	if err != nil {
-		return 0, 0, fmt.Errorf("page_size was invalid. err: %w", err)
+		return 0, 0, fmt.Errorf("pageSize was invalid. err: %w", err)
 	}
 
-	pageNumberString := c.QueryParam("page_number")
+	pageNumberString := c.QueryParam("pageNumber")
 
 	pageNumber, err := strconv.ParseInt(pageNumberString, 10, 32)
 	if err != nil {
-		return 0, 0, fmt.Errorf("page_number was invalid. err: %w", err)
+		return 0, 0, fmt.Errorf("pageNumber was invalid. err: %w", err)
 	}
 
 	return int32(pageSize), int32(pageNumber), nil

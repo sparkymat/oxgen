@@ -245,7 +245,7 @@ func (f InputField) PresenterGoFragment() string {
 }
 
 func (f InputField) CreateAssignParamsGoFragment() string {
-	fragment := "  " + f.Name.CamelcaseSingular() + ": " + f.Name.CamelcaseSingular()
+	fragment := "  " + f.Name.CamelcaseSingular() + ": params." + f.Name.CamelcaseSingular()
 
 	return fragment
 }

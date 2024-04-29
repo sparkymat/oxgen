@@ -155,7 +155,7 @@ package {{ .Service }}
 func (s *Service) Destroy{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error {
 	err := s.dbx.Delete{{ .Resource.CamelcaseSingular }}(ctx, id)
 	if err != nil {
-		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to fetch {{ .Resource.CamelcaseSingular }}: %w", err)
+		return fmt.Errorf("failed to fetch {{ .Resource.CamelcaseSingular }}: %w", err)
 	}
 
 	return item, nil

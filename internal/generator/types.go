@@ -250,6 +250,12 @@ func (f InputField) CreateAssignParamsGoFragment() string {
 	return fragment
 }
 
+func (f InputField) CreateHandlerAssignParamsGoFragment() string {
+	fragment := "  input." + f.Name.CamelcaseSingular() + " = request." + f.Name.CamelcaseSingular()
+
+	return fragment
+}
+
 func (f InputField) UpdateAssignParamGoFragment() string {
 	if f.NotNull {
 		return f.Name.String() + " = @" + f.Name.String() + "::" + f.Type.SQLType()

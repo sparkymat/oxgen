@@ -22,8 +22,14 @@ func {{ .Resource.CamelcasePlural }}Create(s internal.Services) echo.HandlerFunc
       return renderError(c, http.StatusBadRequest, "invalid request", err)
     }
 
+    input := {{ .Service.String }}.Create{{ .Resource.CamelcaseSingular }}Params{}
+
+    {{range .Fields }}{{if .Initial}}{{ .CreateHandlerAssignParamsGoFragment }}
+    {{end}}{{end}}
+
     item, err := s.{{ .Service.Capitalize }}.Create{{ .Resource.CamelcaseSingular }}(
       c.Request().Context(), 
+      input,
     )
     if err != nil {
       return renderError(c, http.StatusInternalServerError, "could not create {{ .Resource.CamelcaseSingular }}", err)

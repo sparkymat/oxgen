@@ -32,7 +32,7 @@ func (s *Service) addServiceMethodsToIface(
 	ctx context.Context,
 	input Input,
 ) error {
-	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "handler")
+	folderPath := filepath.Join(input.WorkspaceFolder, "internal")
 	ifaceFilePath := filepath.Join(folderPath, input.Service.String()+"_service_iface.go")
 
 	if err := s.ensureFolderExists(folderPath); err != nil {

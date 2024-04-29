@@ -158,7 +158,7 @@ func (s *Service) Destroy{{ .Resource.CamelcaseSingular }}(ctx context.Context, 
 		return fmt.Errorf("failed to fetch {{ .Resource.CamelcaseSingular }}: %w", err)
 	}
 
-	return item, nil
+	return nil
 }
 `
 

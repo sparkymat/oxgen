@@ -114,7 +114,7 @@ func {{ .Resource.CamelcasePlural }}Search(s internal.Services) echo.HandlerFunc
 
 		query := c.QueryParam("query")
 
-		items, totalCount, err := s.{{ .Service.String }}.Search{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		items, totalCount, err := s.{{ .Service.Capitalize }}.Search{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
 		if err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to search {{ .Resource.LowerCamelcasePlural }}", err)
 		}
@@ -154,7 +154,7 @@ func {{ .Resource.CamelcasePlural }}FetchRecent(s internal.Services) echo.Handle
 
 		query := c.QueryParam("query")
 
-		items, totalCount, err := s.{{ .Service.String }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		items, totalCount, err := s.{{ .Service.Capitalize }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
 		if err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to fetch recent {{ .Resource.LowerCamelcasePlural }}", err)
 		}
@@ -180,7 +180,7 @@ package api
 
 func {{ .Resource.CamelcasePlural }}Show(s internal.Services) echo.HandlerFunc {
   return wrapWithAuthForMember(func(c echo.Context, _ dbx.User, id uuid.UUID) error {
-    item, err := s.{{ .Service.String }}.Fetch{{ .Resource.CamelcaseSingular }}(
+    item, err := s.{{ .Service.Capitalize }}.Fetch{{ .Resource.CamelcaseSingular }}(
 			c.Request().Context(),
 			id,
 		)
@@ -200,7 +200,7 @@ package api
 
 func {{ .Resource.CamelcasePlural }}Destroy(s internal.Services) echo.HandlerFunc {
   return wrapWithAuthForMember(func(c echo.Context, _ dbx.User, id uuid.UUID) error {
-		if err := s.{{ .Service.String }}.Destroy{{ .Resource.CamelcaseSingular }}(c.Request().Context(), id); err != nil {
+		if err := s.{{ .Service.Capitalize }}.Destroy{{ .Resource.CamelcaseSingular }}(c.Request().Context(), id); err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to destroy {{ .Resource.LowerCamelcaseSingular }}", err)
 		}
 

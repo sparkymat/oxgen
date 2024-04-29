@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-const serviceIfaceTemplate = `package handler
+const serviceIfaceTemplate = `package internal
 
 type {{ .Service.Capitalize }}Service interface {}
 `

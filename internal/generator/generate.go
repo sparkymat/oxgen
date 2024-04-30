@@ -78,6 +78,11 @@ func (s *Service) Generate(ctx context.Context, input Input) error {
 		return fmt.Errorf("failed adding service methods to interface: %w", err)
 	}
 
+	// add new Service to services interface
+	if err := s.addServiceToServices(ctx, input); err != nil {
+		return fmt.Errorf("failed adding service methods to interface: %w", err)
+	}
+
 	// add presenter
 	if err := s.generatePresenter(ctx, input); err != nil {
 		return fmt.Errorf("failed generating presenter: %w", err)

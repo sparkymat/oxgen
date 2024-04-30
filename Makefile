@@ -16,5 +16,6 @@ clean:
 	mkdir -p webapp/frontend/src/slices
 	echo > webapp/internal/database/queries.sql
 	echo "package service; type DatabaseProvider interface {}" | goimports > webapp/internal/service/database_iface.go
+	echo "package internal; type Services struct {}" | goimports > webapp/internal/services.go
 	echo "package route; func registerAPIRoutes(app *echo.Group, cfg internal.ConfigService, services internal.Services) {apiGroup := app.Group(\"api\")}" | goimports > webapp/internal/route/api.go
 	psql webapp -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"

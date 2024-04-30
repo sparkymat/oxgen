@@ -412,7 +412,11 @@ func (f FieldType) TypescriptType() string {
 }
 
 func (f InputField) FrontendModelDeclaration() string {
-	str := "  public " + f.Name.LowerCamelcaseSingular()
+	return "public " + f.FrontendInterfaceDeclaration()
+}
+
+func (f InputField) FrontendInterfaceDeclaration() string {
+	str := f.Name.LowerCamelcaseSingular()
 
 	if !f.NotNull {
 		str += "?"

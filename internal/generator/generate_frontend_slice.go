@@ -32,7 +32,7 @@ export interface SearchRequest {
 {{end}}
 
 export interface CreateRequest {
-{{range .Fields }}{{if .Initial}}{{ .FrontendModelDeclaration }}
+{{range .Fields }}{{if .Initial}}{{ .FrontendInterfaceDeclaration }}
 {{end}}{{end}}
 }
 
@@ -43,7 +43,7 @@ export interface CreateRequest {
 
 {{else}}export interface Update{{ .Name.CamelcaseSingular }}Request {
   id: string;
-{{ .FrontendModelDeclaration }}
+{{ .FrontendInterfaceDeclaration }}
 }
 
 {{end}}{{end}}{{end}}

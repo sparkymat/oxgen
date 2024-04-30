@@ -401,9 +401,9 @@ func (f FieldType) TypescriptType() string {
 	case FieldTypeAttachment:
 		return "string"
 	case FieldTypeDate:
-		return "string"
+		return "dayjs.Dayjs"
 	case FieldTypeTimestamp:
-		return "string"
+		return "dayjs.Dayjs"
 	case FieldTypeUnknown:
 		return "unknown"
 	default:

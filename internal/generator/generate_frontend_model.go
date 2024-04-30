@@ -15,9 +15,9 @@ dayjs.extend(utc);
 export class {{  .Resource.CamelcaseSingular }} {
   public id: string;
 
-  public createdAt: string;
+  public createdAt: dayjs.Dayjs;
 
-  public updatedAt: string;
+  public updatedAt: dayjs.Dayjs;
 
   {{range .Fields }}{{ .FrontendModelDeclaration }}
   {{end}}

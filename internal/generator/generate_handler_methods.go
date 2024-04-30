@@ -158,9 +158,7 @@ func {{ .Resource.CamelcasePlural }}FetchRecent(s internal.Services) echo.Handle
 			return renderError(c, http.StatusBadRequest, "invalid pagination params", err)
 		}
 
-		query := c.QueryParam("query")
-
-		items, totalCount, err := s.{{ .Service.Capitalize }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		items, totalCount, err := s.{{ .Service.Capitalize }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), pageSize, pageNumber)
 		if err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to fetch recent {{ .Resource.LowerCamelcasePlural }}", err)
 		}

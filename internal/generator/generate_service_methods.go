@@ -119,7 +119,7 @@ package {{ .Service }}
 func (s *Service) FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
 	offset := (pageNumber - 1) * pageSize
 
-	items, err := s.dbx.FetchRecent{{ .Resource.CamelcasePlural }}(ctx, dbx.Search{{ .Resource.CamelcasePlural }}Params{
+	items, err := s.dbx.FetchRecent{{ .Resource.CamelcasePlural }}(ctx, dbx.FetchRecent{{ .Resource.CamelcasePlural }}Params{
 		PageOffset: offset,
 		PageLimit:  pageSize,
 	})

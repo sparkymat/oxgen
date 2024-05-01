@@ -22,7 +22,7 @@ export class {{  .Resource.CamelcaseSingular }} {
   {{range .Fields }}{{ .FrontendModelDeclaration }}
   {{end}}
 
-  construction(json: any) {
+  constructor(json: any) {
     if (!json) {
       return;
     }

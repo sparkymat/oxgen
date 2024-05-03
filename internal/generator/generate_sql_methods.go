@@ -12,7 +12,7 @@ const createSQLMethodTemplate = `
 INSERT INTO {{ .Resource.UnderscorePlural }}
 ({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}{{ $field.Name.String }}{{ end }})
 VALUES
-({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Name.String }}::{{ $field.SQLType }}{{ end }})
+({{ range $i, $field := .Fields }}{{ if $i }}, {{ end }}@{{ $field.Name.String }}::{{ $field.Type.SQLType }}{{ end }})
 RETURNING *;
 `
 

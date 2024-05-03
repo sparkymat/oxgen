@@ -53,11 +53,11 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
   endpoints: builder => ({
     recent: builder.query<ListResponse, FetchRecentRequest>({
-      query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
+      query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/recent?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
       providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'LIST' }],
     }),
     {{if .HasSearch }}search: builder.query<ListResponse, SearchRequest>({
-      query: ({query,pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
+      query: ({query,pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/search?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
       providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'SEARCH' }],
     }),{{end}}
     show: builder.query<{{ .Resource.CamelcaseSingular }}, string>({

@@ -51,14 +51,15 @@ export interface CreateRequest {
 export const api = createApi({
   reducerPath: '{{ .Resource.LowerCamelcasePlural }}',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  providesTags: ['{{ .Resource.CamelcaseSingular }]
   endpoints: builder => ({
     recent: builder.query<ListResponse, FetchRecentRequest>({
       query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/recent?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
-      providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'LIST' }],
+      providesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }],
     }),
     {{if .HasSearch }}search: builder.query<ListResponse, SearchRequest>({
       query: ({query,pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/search?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
-      providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'SEARCH' }],
+      providesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
     }),{{end}}
     show: builder.query<{{ .Resource.CamelcaseSingular }}, string>({
       query: id => ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}` + "`" + `,
@@ -75,10 +76,7 @@ export const api = createApi({
           ).content,
         },
       }),
-      providesTags: (result, _error, _arg) => [
-        { type: '{{ .Resource.CamelcaseSingular }}', id: result.id },
-      ],
-      invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }],
+      invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
     }),
     destroy: builder.mutation<void,string>({
       query: id => ({
@@ -90,7 +88,7 @@ export const api = createApi({
           ).content,
         },
       }),
-      invalidatesTags: (_result, _error, arg) => [{ type: '{{ .Resource.CamelcaseSingular }}', id: arg }],
+      invalidatesTags: (_result, _error, arg) => [ { type: '{{ .Resource.CamelcaseSingular }}', id: arg }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
     }),
     {{range .Fields}}{{if .Updateable}}
       {{if eq .Type "attachment"}}upload{{ .Name.CamelcaseSingular }}: builder.mutation<{{ .Resource.CamelcaseSingular }}, Upload{{ .Name.CamelcaseSingular }}Request>({
@@ -104,9 +102,6 @@ export const api = createApi({
             ).content,
           },
         }),
-        providesTags: (result, _error, _arg) => [
-          { type: '{{ .Resource.CamelcaseSingular }}', id: result.id },
-        ],
         invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
       }),
       {{else}}update{{ .Name.CamelcaseSingular }}: builder.mutation<{{ .Resource.CamelcaseSingular }}, Update{{ .Name.CamelcaseSingular }}Request>({
@@ -120,9 +115,6 @@ export const api = createApi({
             ).content,
           },
         }),
-        providesTags: (result, _error, _arg) => [
-          { type: '{{ .Resource.CamelcaseSingular }}', id: result.id },
-        ],
         invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
       }),{{end}}{{end}}{{end}}
   }),

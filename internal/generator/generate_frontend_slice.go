@@ -57,11 +57,11 @@ export const api = createApi({
       providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'LIST' }],
     }),
     {{if .HasSearch }}search: builder.query<ListResponse, SearchRequest>({
-      query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
+      query: ({query,pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}?query=${encodeURIComponent(query)}&pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
       providesTags: [{ type: '{{ .Resource.CamelcasePlural }}', id: 'SEARCH' }],
     }),{{end}}
     show: builder.query<{{ .Resource.CamelcaseSingular }}, string>({
-      query: id => "{{ .Resource.UnderscorePlural }}/${id}",
+      query: id => ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}` + "`" + `,
       providesTags: (_result, _error, arg) => [{ type: '{{ .Resource.CamelcaseSingular }}', id: arg }],
     }),
     create: builder.mutation<{{ .Resource.CamelcaseSingular }}, CreateRequest>({

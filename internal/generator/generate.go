@@ -108,6 +108,11 @@ func (s *Service) Generate(ctx context.Context, input Input) error {
 		return fmt.Errorf("failed generating frontend slice: %w", err)
 	}
 
+	// add frontend components
+	if err := s.generateFrontendComponents(ctx, input); err != nil {
+		return fmt.Errorf("failed generating frontend components: %w", err)
+	}
+
 	return nil
 }
 

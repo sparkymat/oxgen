@@ -51,7 +51,7 @@ export interface CreateRequest {
 export const api = createApi({
   reducerPath: '{{ .Resource.LowerCamelcasePlural }}',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  providesTags: ['{{ .Resource.CamelcaseSingular }]
+  providesTags: ['{{ .Resource.CamelcaseSingular }}]
   endpoints: builder => ({
     recent: builder.query<ListResponse, FetchRecentRequest>({
       query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/recent?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
@@ -93,7 +93,7 @@ export const api = createApi({
     {{range .Fields}}{{if .Updateable}}
       {{if eq .Type "attachment"}}upload{{ .Name.CamelcaseSingular }}: builder.mutation<{{ .Resource.CamelcaseSingular }}, Upload{{ .Name.CamelcaseSingular }}Request>({
         query: ({id, formData }) => ({
-          url: ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}/upload_{{ .Resource.UnderscoreSingular }}` + "`" + `,
+          url: ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}/upload_{{ .Name.UnderscoreSingular }}` + "`" + `,
           method: 'PATCH',
           body: formData,
           headers: {
@@ -125,6 +125,11 @@ export const {
   {{if .HasSearch}}useSearchQuery,
   {{end}}useCreateMutation,
   useShowQuery,
+  {{range .Fields}}{{if .Updateable}}
+    {{if eq .Type "attachment"}}useUpload{{ .Name.CamelcaseSingular }}Mutation, 
+    {{else}}useUpdate{{ .Name.CamelcaseSingular }}Mutation,
+    {{end}}
+  {{end}}{{end}}
   useDestroyMutation
 } = api;
 

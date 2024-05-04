@@ -19,6 +19,6 @@ db-schema-dump:
 	pg_dump --schema-only -O webapp > internal/database/schema.sql
 
 sqlc-gen:
-	sqlc --experimental generate
+	sqlc generate
 
 .PHONY: webapp start-app start-view db-migrate db-schema-dump sqlc-gen

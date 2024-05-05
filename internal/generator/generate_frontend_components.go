@@ -75,7 +75,7 @@ export const {{ .Resource.CamelcasePlural }}Page = () => {
     createItem({
       name: createName,
     }).then(res => {
-      window.location.href = ` + "`" + `/#/{{ .Resource.UnderscorePlural }}/${(res as any).data.id}` + "`" + `;
+      window.location.href = ` + "`" + `/#/{{ .Resource.UnderscoreSingular }}/${(res as any).data.id}` + "`" + `;
     });
     setCreateShown(false);
   }, [createItem, createName]);
@@ -245,7 +245,7 @@ export const {{ .Resource.CamelcaseSingular }}Page = () => {
       confirmProps: { color: 'red' },
       onConfirm: () => {
         destroyItem(id || '').then(() => {
-          window.location.href = '/#/collections';
+          window.location.href = '/#/{{ .Resource.UnderscorePlural }}';
         });
       },
     });

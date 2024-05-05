@@ -52,7 +52,7 @@ export interface CreateRequest {
 export const api = createApi({
   reducerPath: '{{ .Resource.LowerCamelcasePlural }}',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  providesTags: ['{{ .Resource.CamelcaseSingular }}'],
+  tagTypes: ['{{ .Resource.CamelcaseSingular }}'],
   endpoints: builder => ({
     recent: builder.query<ListResponse, FetchRecentRequest>({
       query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/recent?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,

@@ -81,7 +81,7 @@ export const api = createApi({
     }),
     destroy: builder.mutation<void,string>({
       query: id => ({
-        url: '{{ .Resource.UnderscorePlural }}/${id}',
+        url: ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}` + "`" + `,
         method: 'DELETE',
         headers: {
           'X-CSRF-Token': (

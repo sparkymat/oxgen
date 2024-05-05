@@ -10,6 +10,7 @@ import (
 const frontendSliceTemplate = `
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { {{ .Resource.CamelcaseSingular }} } from '../models/{{ .Resource.CamelcaseSingular }}';
+import dayjs from 'dayjs';
 
 export interface ListResponse {
   items: {{ .Resource.CamelcaseSingular }}[];
@@ -51,7 +52,7 @@ export interface CreateRequest {
 export const api = createApi({
   reducerPath: '{{ .Resource.LowerCamelcasePlural }}',
   baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
-  providesTags: ['{{ .Resource.CamelcaseSingular }}]
+  providesTags: ['{{ .Resource.CamelcaseSingular }}'],
   endpoints: builder => ({
     recent: builder.query<ListResponse, FetchRecentRequest>({
       query: ({pageSize, pageNumber}) => ` + "`{{ .Resource.UnderscorePlural }}/recent?pageSize=${pageSize}&pageNumber=${pageNumber}`" + `,
@@ -102,11 +103,11 @@ export const api = createApi({
             ).content,
           },
         }),
-        invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
+        invalidatesTags: (_result, _error, arg) => [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }, { type: '{{ .Resource.CamelcaseSingular }}', id: arg.id}],
       }),
       {{else}}update{{ .Name.CamelcaseSingular }}: builder.mutation<{{ .Resource.CamelcaseSingular }}, Update{{ .Name.CamelcaseSingular }}Request>({
         query: ({id, {{ .Name.LowerCamelcaseSingular }} }) => ({
-          url: ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}/upload_{{ .Resource.UnderscoreSingular }}` + "`" + `,
+          url: ` + "`" + `{{ .Resource.UnderscorePlural }}/${id}/update_{{ .Name.UnderscoreSingular }}` + "`" + `,
           method: 'PATCH',
           body: { {{ .Name.LowerCamelcaseSingular }} },
           headers: {
@@ -115,7 +116,7 @@ export const api = createApi({
             ).content,
           },
         }),
-        invalidatesTags: [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }],
+        invalidatesTags: (_result, _error, arg) => [{ type: '{{ .Resource.CamelcaseSingular }}', id: 'LIST' }, { type: '{{ .Resource.CamelcaseSingular }}', id: 'SEARCH' }, { type: '{{ .Resource.CamelcaseSingular }}', id: arg.id}],
       }),{{end}}{{end}}{{end}}
   }),
 });

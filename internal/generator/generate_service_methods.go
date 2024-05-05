@@ -57,7 +57,7 @@ const uploadAttachmentServiceMethodTemplate = `
 package {{ .Service }}
 
 func (s *Service) Upload{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingular }}(ctx context.Context, id uuid.UUID, filename string, attachmentFile io.Reader) (dbx.{{ .Resource.CamelcaseSingular }}, error) {
-	folderPath := path.Join(s.storageFolder, "{{ .Resource.UnderscoreSingular }}", fmt.Sprintf("%s", id.String()))
+	folderPath := path.Join(s.storageFolder, "{{ .Resource.UnderscoreSingular }}", id.String())
 
 	if err := os.MkdirAll(folderPath, 0o755); err != nil { //nolint:gomnd
 		return dbx.{{ .Resource.CamelcaseSingular }}{}, fmt.Errorf("failed to create {{ .Resource.UnderscoreSingular }} folder. err: %w", err)
@@ -153,6 +153,12 @@ const destroyServiceMethodTemplate = `
 package {{ .Service }}
 
 func (s *Service) Destroy{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error {
+	folderPath := path.Join(s.storageFolder, "{{ .Resource.UnderscoreSingular }}", id.String())
+
+	if err := os.RemoveAll(folderPath); err != nil {
+		return fmt.Errorf("failed to remove {{ .Resource.CamelcaseSingular }} folder: %w", err)
+	}
+
 	err := s.dbx.Delete{{ .Resource.CamelcaseSingular }}(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to fetch {{ .Resource.CamelcaseSingular }}: %w", err)

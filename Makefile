@@ -9,7 +9,8 @@ clean:
 	rm -rf webapp/internal/handler/*.go
 	rm -rf webapp/internal/handler/api/*_*.go
 	rm -rf webapp/internal/handler/api/presenter/*.go
-	rm -rf webapp/frontend
+	rm -rf webapp/frontend/src/models
+	rm -rf webapp/frontend/src/slices
 	mkdir -p webapp/internal/route
 	mkdir -p webapp/internal/service
 	mkdir -p webapp/internal/handler

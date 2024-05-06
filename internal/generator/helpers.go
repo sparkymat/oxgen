@@ -2,6 +2,8 @@
 package generator
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,7 +14,10 @@ import (
 	"text/template"
 )
 
-var ErrInvalidPath = errors.New("invalid path")
+var (
+	ErrInvalidPath    = errors.New("invalid path")
+	ErrAnchorNotFound = errors.New("anchor not found")
+)
 
 func (*Service) ensureFolderExists(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -113,4 +118,76 @@ func (*Service) appendTemplateToFile(
 	}
 
 	return nil
+}
+
+func (*Service) injectTemplateAboveLine(
+	filePath string,
+	anchorLine string,
+	templateName string,
+	templateString string,
+	input any,
+) error {
+	tmpl, err := template.New(templateName).Parse(templateString)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	targetFile, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open target file: %w", err)
+	}
+
+	defer targetFile.Close() //nolint:errcheck
+
+	targetLines := []string{}
+	scanner := bufio.NewScanner(targetFile)
+
+	anchorIndex := -1
+	lineNumber := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		targetLines = append(targetLines, line)
+
+		if strings.TrimSpace(line) == anchorLine {
+			anchorIndex = lineNumber
+		}
+
+		lineNumber += 1
+	}
+	if err = scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read target file: %w", err)
+	}
+
+	if anchorIndex == -1 {
+		return ErrAnchorNotFound
+	}
+
+	templateBuf := &bytes.Buffer{}
+	if err = tmpl.Execute(templateBuf, input); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	finalLines := append(targetLines[:anchorIndex+1], targetLines[anchorIndex:]...)
+	finalLines[anchorIndex] = templateBuf.String()
+
+	err = writeLinesToFile(finalLines, filePath)
+	if err != nil {
+		return fmt.Errorf("failed to write target file: %w", err)
+	}
+
+	return nil
+}
+
+func writeLinesToFile(lines []string, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	w := bufio.NewWriter(file)
+	for _, line := range lines {
+		fmt.Fprintln(w, line)
+	}
+	return w.Flush()
 }

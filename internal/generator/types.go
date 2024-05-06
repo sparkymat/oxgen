@@ -194,7 +194,7 @@ func (f InputField) CreateSQLFragment() string {
 	fragment := "  " + f.Name.String() + " " + f.Type.SQLType()
 
 	if f.Type == FieldTypeReferences {
-		fragment += (" REFERENCES(" + f.Table + ")")
+		fragment += (" REFERENCES " + f.Table + "(id)")
 	}
 
 	if f.Default != "" {

@@ -283,11 +283,13 @@ func (f InputField) PresenterAssignment() string {
 		str += "v := m." + f.Name.CamelcaseSingular() + ".Time"
 
 		switch f.Type {
+		case FieldTypeReferences:
+			str += ".String()"
 		case FieldTypeDate:
 			str += ".Format(\"2006-01-02\")"
 		case FieldTypeTimestamp:
 			str += ".Format(time.RFC3339)"
-		case FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeReferences, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
+		case FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
 		default:
 		}
 

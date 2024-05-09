@@ -19,8 +19,9 @@ RETURNING *;
 const recentSQLMethodTemplate = `
 -- name: FetchRecent{{ .Resource.CamelcasePlural }} :many
 SELECT *
-  FROM {{ .Resource.UnderscorePlural }} t
-  ORDER BY t.updated_at DESC
+  FROM {{ .Resource.UnderscorePlural }} t{{if ne .Parent nil }}
+  WHERE {{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
+{{end}}  ORDER BY t.updated_at DESC
   LIMIT @page_limit::int
   OFFSET @page_offset::int;
 `
@@ -28,7 +29,9 @@ SELECT *
 const countRecentSQLMethodTemplate = `
 -- name: CountRecent{{ .Resource.CamelcasePlural }} :one
 SELECT COUNT(id)
-  FROM {{ .Resource.UnderscorePlural }} t;
+  FROM {{ .Resource.UnderscorePlural }} t{{if ne .Parent nil }}
+  WHERE {{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
+{{end}};
 `
 
 const searchSQLMethodTemplate = `

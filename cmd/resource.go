@@ -22,6 +22,8 @@ var workspaceFolder string //nolint:gochecknoglobals
 
 var searchField string //nolint:gochecknoglobals
 
+var parent string //nolint:gochecknoglobals
+
 //nolint:gochecknoglobals
 var resourceCmd = &cobra.Command{
 	Use:   "resource",
@@ -70,6 +72,19 @@ var resourceCmd = &cobra.Command{
 			fields = append(fields, field)
 		}
 
+		if parent != "" {
+			parentName := generator.TemplateName(parent)
+			fields = append(fields, generator.InputField{
+				Service:  generator.TemplateName(service),
+				Resource: generator.TemplateName(name),
+				Name:     generator.TemplateName(parentName.UnderscoreSingular() + "_id"),
+				Type:     generator.FieldTypeReferences,
+				Required: true,
+				Table:    parentName.UnderscorePlural(),
+				NotNull:  true,
+			})
+		}
+
 		input := generator.Input{
 			WorkspaceFolder: workspaceFolder,
 			HasSearch:       searchField != "",
@@ -77,6 +92,11 @@ var resourceCmd = &cobra.Command{
 			Resource:        generator.TemplateName(name),
 			Fields:          fields,
 			SearchField:     searchField,
+		}
+
+		if parent != "" {
+			v := generator.TemplateName(parent)
+			input.Parent = &v
 		}
 
 		if err := gen.Generate(cmd.Context(), input); err != nil {
@@ -87,10 +107,11 @@ var resourceCmd = &cobra.Command{
 
 //nolint:gochecknoinits
 func init() {
-	resourceCmd.Flags().BoolVarP(&skipGitCheck, "skip-git", "g", false, "Skip git check for uncommitted changes")
-	resourceCmd.Flags().StringVarP(&workspaceFolder, "path", "p", ".", "Path to workspace")
-	resourceCmd.Flags().StringVarP(&searchField, "query-field", "q", "", "Field to search by")
-	resourceCmd.Flags().StringVarP(&service, "service", "s", "", "Service that the resource belongs to")
+	resourceCmd.Flags().BoolVar(&skipGitCheck, "skip-git", false, "Skip git check for uncommitted changes")
+	resourceCmd.Flags().StringVar(&workspaceFolder, "path", ".", "Path to workspace")
+	resourceCmd.Flags().StringVar(&searchField, "query-field", "", "Field to search by")
+	resourceCmd.Flags().StringVar(&service, "service", "", "Service that the resource belongs to")
+	resourceCmd.Flags().StringVar(&parent, "parent", "", "Parent resource")
 	resourceCmd.MarkFlagRequired("service") //nolint:errcheck,gosec
 
 	rootCmd.AddCommand(resourceCmd)

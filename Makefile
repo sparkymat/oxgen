@@ -1,6 +1,6 @@
 gen: clean
-	go run oxgen.go resource -p webapp -q name -s blog -g Post title:string:not_null:default=:updateable body:string:not_null:default= photo:attachment
-	go run oxgen.go resource -p webapp -q name -s blog -g Comment post:parent username:string:not_null body:string:not_null:default=:updateable
+	go run oxgen.go resource --path=webapp --query-field=title --service=blog --skip-git Post title:string:not_null:default=:updateable body:string:not_null:default= photo:attachment
+	go run oxgen.go resource --path=webapp --service=blog --parent=post --skip-git Comment username:string:not_null body:string:not_null:default=:updateable
 
 clean:
 	rm -f oxgen

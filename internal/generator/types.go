@@ -13,6 +13,7 @@ type Input struct {
 	WorkspaceFolder string
 	Service         TemplateName
 	Resource        TemplateName
+	Parent          *TemplateName
 	SearchField     string
 	HasSearch       bool
 	Fields          []InputField

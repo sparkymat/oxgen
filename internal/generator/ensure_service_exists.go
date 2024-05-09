@@ -31,7 +31,7 @@ const mainServiceInitTemplate = `{{ .Service.String }}Service := {{ .Service.Str
 services.{{ .Service.Capitalize }} = {{ .Service.String }}Service
 `
 
-func (s *Service) ensureServiceExists(_ context.Context, input Input) error {
+func (s *Service) ensureServiceExists(ctx context.Context, input Input) error {
 	folderPath := filepath.Join(input.WorkspaceFolder, "internal", "service", input.Service.String())
 	filePath := filepath.Join(folderPath, "service.go")
 
@@ -53,6 +53,11 @@ func (s *Service) ensureServiceExists(_ context.Context, input Input) error {
 	}
 
 	if !serviceFileExists {
+		// add new Service to services interface
+		if err := s.addServiceToServices(ctx, input); err != nil {
+			return fmt.Errorf("failed adding service methods to interface: %w", err)
+		}
+
 		// add the new service to main.go
 		if err := s.injectTemplateAboveLine(
 			filepath.Join(input.WorkspaceFolder, "main.go"),

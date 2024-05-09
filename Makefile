@@ -1,5 +1,6 @@
 gen: clean
-	go run oxgen.go resource -p webapp -q name -s blog -g User name:string:not_null:default=:updateable username:string:not_null:unique encrypted_password:string:not_null age:int:updateable dob:date:updateable photo:attachment
+	go run oxgen.go resource -p webapp -q name -s blog -g Post title:string:not_null:default=:updateable body:string:not_null:default= photo:attachment
+	go run oxgen.go resource -p webapp -q name -s blog -g Comment post:parent username:string:not_null body:string:not_null:default=:updateable
 
 clean:
 	rm -f oxgen

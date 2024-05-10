@@ -14,8 +14,8 @@ type {{ .Service.Capitalize }}Service interface {}
 
 const serviceMethodsIfaceTemplate = `
   Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params {{ .Service.String }}.Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error){{if .HasSearch }}
-  Search{{ .Resource.CamelcasePlural }}(ctx context.Context, query string, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error){{end}}
-  FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) 
+  Search{{ .Resource.CamelcasePlural }}(ctx context.Context,{{if ne .Parent nil}}parentID uuid.UUID,{{end}} query string, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error){{end}}
+  FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context,{{if ne .Parent nil}}parentID uuid.UUID,{{end}} pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error)
   Fetch{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID)(dbx.{{ .Resource.CamelcaseSingular }}, error) 
   Destroy{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error 
 `

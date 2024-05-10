@@ -92,19 +92,25 @@ func (s *Service) Upload{{ .Resource.CamelcaseSingular }}{{ .Name.CamelcaseSingu
 const searchServiceMethodTemplate = `
 package {{ .Service }}
 
-func (s *Service) Search{{ .Resource.CamelcasePlural }}(ctx context.Context, query string, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
+func (s *Service) Search{{ .Resource.CamelcasePlural }}(ctx context.Context,{{if ne .Parent nil}}parentID uuid.UUID,{{end}} query string, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
 	offset := (pageNumber - 1) * pageSize
 
 	items, err := s.dbx.Search{{ .Resource.CamelcasePlural }}(ctx, dbx.Search{{ .Resource.CamelcasePlural }}Params{
-		Query:      query,
-		PageOffset: offset,
+		Query:      query,{{if ne .Parent nil}}
+    ParentID: parentID,
+{{end}}		PageOffset: offset,
 		PageLimit:  pageSize,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to search {{ .Resource.CamelcasePlural }}: %w", err)
 	}
 
-	totalCount, err := s.dbx.CountSearched{{ .Resource.CamelcasePlural }}(ctx, query)
+{{if eq .Parent nil}}	totalCount, err := s.dbx.CountSearched{{ .Resource.CamelcasePlural }}(ctx, query)
+{{else}}  totalCount, err := s.dbx.CountSearched{{ .Resource.CamelcasePlural }}(ctx, dbx.CountSearched{{ .Resource.CamelcasePlural }}Params{
+    Query: query,
+    ParentID: parentID,
+  })
+{{end}}
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch {{ .Resource.CamelcasePlural }} search count: %w", err)
 	}
@@ -116,7 +122,7 @@ func (s *Service) Search{{ .Resource.CamelcasePlural }}(ctx context.Context, que
 const recentServiceMethodTemplate = `
 package {{ .Service }}
 
-func (s *Service) FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context, pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
+func (s *Service) FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context,{{if ne .Parent nil}}parentID uuid.UUID,{{end}} pageSize int32, pageNumber int32)([]dbx.{{ .Resource.CamelcaseSingular }}, int64, error) {
 	offset := (pageNumber - 1) * pageSize
 
 	items, err := s.dbx.FetchRecent{{ .Resource.CamelcasePlural }}(ctx, dbx.FetchRecent{{ .Resource.CamelcasePlural }}Params{

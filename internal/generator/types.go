@@ -246,7 +246,13 @@ func (f InputField) PresenterGoFragment() string {
 }
 
 func (f InputField) CreateAssignParamsGoFragment() string {
-	fragment := "  " + f.Name.CamelcaseSingular() + ": params." + f.Name.CamelcaseSingular()
+	dbxName := f.Name.CamelcaseSingular()
+
+	if strings.HasSuffix(dbxName, "Id") {
+		dbxName = dbxName[:len(dbxName)-2] + "ID"
+	}
+
+	fragment := "  " + dbxName + ": params." + f.Name.CamelcaseSingular()
 
 	return fragment
 }

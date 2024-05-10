@@ -20,7 +20,7 @@ const recentSQLMethodTemplate = `
 -- name: FetchRecent{{ .Resource.CamelcasePlural }} :many
 SELECT *
   FROM {{ .Resource.UnderscorePlural }} t{{if ne .Parent nil }}
-  WHERE {{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
+  WHERE t.{{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
 {{end}}  ORDER BY t.updated_at DESC
   LIMIT @page_limit::int
   OFFSET @page_offset::int;
@@ -30,7 +30,7 @@ const countRecentSQLMethodTemplate = `
 -- name: CountRecent{{ .Resource.CamelcasePlural }} :one
 SELECT COUNT(id)
   FROM {{ .Resource.UnderscorePlural }} t{{if ne .Parent nil }}
-  WHERE {{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
+  WHERE t.{{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
 {{end}};
 `
 
@@ -38,8 +38,9 @@ const searchSQLMethodTemplate = `
 -- name: Search{{ .Resource.CamelcasePlural }} :many
 SELECT *
   FROM {{ .Resource.UnderscorePlural }} t
-  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%'
-  ORDER BY t.{{ .SearchField }} ASC
+  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%'{{if ne .Parent nil}}
+    AND t.{{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid
+{{end}}  ORDER BY t.{{ .SearchField }} ASC
   LIMIT @page_limit::int
   OFFSET @page_offset::int;
 `
@@ -48,7 +49,8 @@ const countSearchedSQLMethodTemplate = `
 -- name: CountSearched{{ .Resource.CamelcasePlural }} :one
 SELECT COUNT(id)
   FROM {{ .Resource.UnderscorePlural }} t
-  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%';
+  WHERE t.{{ .SearchField }} ILIKE '%' || @query::text || '%'{{if eq .Parent nil}};{{else}}
+    AND t.{{ .Parent.UnderscoreSingular }}_id = @parent_id::uuid;{{end}}
 `
 
 const fetchByIDSQLMethodTemplate = `

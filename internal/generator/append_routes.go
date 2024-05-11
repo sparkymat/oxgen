@@ -9,8 +9,8 @@ import (
 
 const routeMethodsTemplate = `
   apiGroup.POST("/{{ .Resource.UnderscorePlural }}", api.{{ .Resource.CamelcasePlural }}Create(services))
-  {{if .HasSearch}}apiGroup.GET("/{{ .Resource.UnderscorePlural }}/search", api.{{ .Resource.CamelcasePlural }}Search(services))
-  {{end}}apiGroup.GET("/{{ .Resource.UnderscorePlural }}/recent", api.{{ .Resource.CamelcasePlural }}FetchRecent(services))
+  {{if .HasSearch}}apiGroup.GET("{{if ne .Parent nil}}/{{ .Parent.UnderscorePlural }}/:parent_id{{end}}/{{ .Resource.UnderscorePlural }}/search", api.{{ .Resource.CamelcasePlural }}Search(services))
+  {{end}}apiGroup.GET("{{if ne .Parent nil}}/{{ .Parent.UnderscorePlural }}/:parent_id{{end}}/{{ .Resource.UnderscorePlural }}/recent", api.{{ .Resource.CamelcasePlural }}FetchRecent(services))
   apiGroup.GET("/{{ .Resource.UnderscorePlural }}/:id", api.{{ .Resource.CamelcasePlural }}Show(services))
   apiGroup.DELETE("/{{ .Resource.UnderscorePlural }}/:id", api.{{ .Resource.CamelcasePlural }}Destroy(services))
 `

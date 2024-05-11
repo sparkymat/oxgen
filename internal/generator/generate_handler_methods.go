@@ -112,7 +112,9 @@ type {{ .Resource.CamelcasePlural }}SearchResponse struct {
 }
 
 func {{ .Resource.CamelcasePlural }}Search(s internal.Services) echo.HandlerFunc {
-  return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+{{if eq .Parent nil}}  return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+{{else}}  return wrapWithAuthForChild(func(c echo.Context, _ dbx.User, parentID uuid.UUID) error {
+{{end}}
 		pageSize, pageNumber, err := parsePaginationParams(c)
 		if err != nil {
 			return renderError(c, http.StatusBadRequest, "invalid pagination params", err)
@@ -120,7 +122,7 @@ func {{ .Resource.CamelcasePlural }}Search(s internal.Services) echo.HandlerFunc
 
 		query := c.QueryParam("query")
 
-		items, totalCount, err := s.{{ .Service.Capitalize }}.Search{{ .Resource.CamelcasePlural }}(c.Request().Context(), query, pageSize, pageNumber)
+		items, totalCount, err := s.{{ .Service.Capitalize }}.Search{{ .Resource.CamelcasePlural }}(c.Request().Context(),{{if ne .Parent nil}} parentID,{{end}} query, pageSize, pageNumber)
 		if err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to search {{ .Resource.LowerCamelcasePlural }}", err)
 		}
@@ -152,13 +154,15 @@ type {{ .Resource.CamelcasePlural }}FetchRecentResponse struct {
 }
 
 func {{ .Resource.CamelcasePlural }}FetchRecent(s internal.Services) echo.HandlerFunc {
-  return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+{{if eq .Parent nil}}  return wrapWithAuth(func(c echo.Context, _ dbx.User) error {
+{{else}}  return wrapWithAuthForChild(func(c echo.Context, _ dbx.User, parentID uuid.UUID) error {
+{{end}}
 		pageSize, pageNumber, err := parsePaginationParams(c)
 		if err != nil {
 			return renderError(c, http.StatusBadRequest, "invalid pagination params", err)
 		}
 
-		items, totalCount, err := s.{{ .Service.Capitalize }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(), pageSize, pageNumber)
+		items, totalCount, err := s.{{ .Service.Capitalize }}.FetchRecent{{ .Resource.CamelcasePlural }}(c.Request().Context(),{{if ne .Parent nil}} parentID,{{end}} pageSize, pageNumber)
 		if err != nil {
 			return renderError(c, http.StatusInternalServerError, "failed to fetch recent {{ .Resource.LowerCamelcasePlural }}", err)
 		}

@@ -24,8 +24,10 @@ func renderError(c echo.Context, statusCode int, message string, err error) erro
 }
 
 type (
-	authenticatedHandlerFunc       func(c echo.Context, user dbx.User) error
-	authenticatedMemberHandlerFunc func(c echo.Context, user dbx.User, id uuid.UUID) error
+	authenticatedHandlerFunc            func(c echo.Context, user dbx.User) error
+	authenticatedMemberHandlerFunc      func(c echo.Context, user dbx.User, id uuid.UUID) error
+	authenticatedChildHandlerFunc       func(c echo.Context, user dbx.User, parentID uuid.UUID) error
+	authenticatedChildMemberHandlerFunc func(c echo.Context, user dbx.User, parentID uuid.UUID, id uuid.UUID) error
 )
 
 func wrapWithAuth(handlerFunc authenticatedHandlerFunc) echo.HandlerFunc {
@@ -36,6 +38,24 @@ func wrapWithAuth(handlerFunc authenticatedHandlerFunc) echo.HandlerFunc {
 		}
 
 		return handlerFunc(c, user)
+	}
+}
+
+func wrapWithAuthForChild(handlerFunc authenticatedChildHandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, isUser := c.Get(auth.UserKey).(dbx.User)
+		if !isUser {
+			return renderError(c, http.StatusInternalServerError, "failed to load user", nil)
+		}
+
+		parentIDString := c.Param("parent_id")
+
+		parentID, err := uuid.Parse(parentIDString)
+		if err != nil {
+			return renderError(c, http.StatusNotFound, "not found", err)
+		}
+
+		return handlerFunc(c, user, parentID)
 	}
 }
 
@@ -54,6 +74,31 @@ func wrapWithAuthForMember(handlerFunc authenticatedMemberHandlerFunc) echo.Hand
 		}
 
 		return handlerFunc(c, user, id)
+	}
+}
+
+func wrapWithAuthForChildMember(handlerFunc authenticatedChildMemberHandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		user, isUser := c.Get(auth.UserKey).(dbx.User)
+		if !isUser {
+			return renderError(c, http.StatusInternalServerError, "failed to load user", nil)
+		}
+
+		parentIDString := c.Param("parent_id")
+
+		parentID, err := uuid.Parse(parentIDString)
+		if err != nil {
+			return renderError(c, http.StatusNotFound, "not found", err)
+		}
+
+		idString := c.Param("id")
+
+		id, err := uuid.Parse(idString)
+		if err != nil {
+			return renderError(c, http.StatusNotFound, "not found", err)
+		}
+
+		return handlerFunc(c, user, parentID, id)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/samber/lo"
 )
 
 var ErrInvalidResourceField = errors.New("invalid resource field")
@@ -26,6 +27,7 @@ type InputField struct {
 	Type       FieldType
 	Required   bool
 	Default    string
+	EnumValues []string
 	Table      string
 	Unique     bool
 	Updateable bool
@@ -36,6 +38,7 @@ type FieldType string
 
 const (
 	FieldTypeString     FieldType = "string"
+	FieldTypeEnum       FieldType = "enum"
 	FieldTypeInt        FieldType = "int"
 	FieldTypeBool       FieldType = "bool"
 	FieldTypeDate       FieldType = "date"
@@ -67,6 +70,8 @@ func ParseField(service string, resource string, fieldString string) (InputField
 	switch fieldTypeString {
 	case "string": //nolint:goconst
 		field.Type = FieldTypeString
+	case "enum":
+		field.Type = FieldTypeEnum
 	case "int":
 		field.Type = FieldTypeInt
 	case "bool": //nolint:goconst
@@ -94,6 +99,9 @@ func ParseField(service string, resource string, fieldString string) (InputField
 		case strings.HasPrefix(word, "table="):
 			kvWords := strings.Split(word, "=")
 			field.Table = kvWords[1]
+		case strings.HasPrefix(word, "values="):
+			kvWords := strings.Split(word, "=")
+			field.EnumValues = strings.Split(kvWords[1], ",")
 		case word == "unique":
 			field.Unique = true
 		case word == "not_null":
@@ -105,13 +113,23 @@ func ParseField(service string, resource string, fieldString string) (InputField
 		}
 	}
 
+	if field.Type == FieldTypeEnum {
+		if len(field.EnumValues) == 0 {
+			return InputField{}, ErrInvalidResourceField
+		}
+
+		field.NotNull = true
+	}
+
 	return field, nil
 }
 
-func (f FieldType) SQLType() string {
-	switch f {
+func (f InputField) SQLType() string {
+	switch f.Type {
 	case FieldTypeString:
 		return "text"
+	case FieldTypeEnum:
+		return f.Resource.UnderscoreSingular() + "_" + f.Name.UnderscoreSingular()
 	case FieldTypeInt:
 		return "integer"
 	case FieldTypeBool:
@@ -133,10 +151,22 @@ func (f FieldType) SQLType() string {
 	}
 }
 
-func (f FieldType) GoType() string {
-	switch f {
+func (f InputField) EnumTypesCreateSQL() string {
+	if f.Type != FieldTypeEnum {
+		return ""
+	}
+
+	evStrings := lo.Map(f.EnumValues, func(s string, _ int) string { return "'" + s + "'" })
+
+	return "CREATE TYPE " + f.SQLType() + " AS ENUM (\n" + strings.Join(evStrings, ",\n") + "\n);"
+}
+
+func (f InputField) GoType() string {
+	switch f.Type {
 	case FieldTypeString:
 		return "string"
+	case FieldTypeEnum:
+		return "dbx." + f.Resource.CamelcaseSingular() + f.Name.CamelcaseSingular()
 	case FieldTypeInt:
 		return "int32"
 	case FieldTypeBool:
@@ -158,8 +188,8 @@ func (f FieldType) GoType() string {
 	}
 }
 
-func (f FieldType) PresenterGoType() string {
-	switch f {
+func (f InputField) PresenterGoType() string {
+	switch f.Type {
 	case FieldTypeString:
 		return "string"
 	case FieldTypeInt:
@@ -192,7 +222,7 @@ func (f InputField) JSONName() string {
 }
 
 func (f InputField) CreateSQLFragment() string {
-	fragment := "  " + f.Name.String() + " " + f.Type.SQLType()
+	fragment := "  " + f.Name.String() + " " + f.SQLType()
 
 	if f.Type == FieldTypeReferences {
 		fragment += (" REFERENCES " + f.Table + "(id)")
@@ -222,13 +252,13 @@ func (f InputField) JSONTag() string {
 }
 
 func (f InputField) CreateParamsGoFragment() string {
-	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType()
+	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.GoType()
 
 	return fragment
 }
 
 func (f InputField) CreateRequestGoFragment() string {
-	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.Type.GoType() + " " + f.JSONTag()
+	fragment := "  " + f.Name.CamelcaseSingular() + " " + f.GoType() + " " + f.JSONTag()
 
 	return fragment
 }
@@ -240,7 +270,7 @@ func (f InputField) PresenterGoFragment() string {
 		fragment += "*"
 	}
 
-	fragment += (f.Type.PresenterGoType() + " " + f.JSONTag())
+	fragment += (f.PresenterGoType() + " " + f.JSONTag())
 
 	return fragment
 }
@@ -265,7 +295,7 @@ func (f InputField) CreateHandlerAssignParamsGoFragment() string {
 
 func (f InputField) UpdateAssignParamGoFragment() string {
 	if f.NotNull {
-		return f.Name.String() + " = @" + f.Name.String() + "::" + f.Type.SQLType()
+		return f.Name.String() + " = @" + f.Name.String() + "::" + f.SQLType()
 	}
 
 	return f.Name.String() + " = sqlc.narg('" + f.Name.String() + "')"
@@ -278,7 +308,7 @@ func (f InputField) UpdateGoFunctionSignatureParam() string {
 		paramString = "valuePtr *"
 	}
 
-	paramString += f.Type.GoType()
+	paramString += f.GoType()
 
 	return paramString
 }

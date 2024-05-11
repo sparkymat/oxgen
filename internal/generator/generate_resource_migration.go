@@ -10,7 +10,9 @@ import (
 )
 
 const upTemplate = `CREATE EXTENSION IF NOT EXISTS moddatetime;
-
+{{range $f := .Fields}}{{ if eq $f.Type "enum" }}
+{{ $f.EnumTypesCreateSQL }}
+{{end}}{{end}}
 CREATE TABLE {{ .Resource.UnderscorePlural }} (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 {{range .Fields}}{{ .CreateSQLFragment }},

@@ -1,5 +1,5 @@
 gen: clean
-	go run oxgen.go resource --path=webapp --query-field=title --service=blog --skip-git Post title:string:not_null:default=:updateable body:string:not_null:default= photo:attachment
+	go run oxgen.go resource --path=webapp --query-field=title --service=blog --skip-git Post title:string:not_null:default=:updateable type:enum:values=meta,fiction body:string:not_null:default= photo:attachment
 	go run oxgen.go resource --path=webapp --query-field=username --service=blog --parent=post --skip-git Comment username:string:not_null body:string:not_null:default=:updateable
 
 clean:

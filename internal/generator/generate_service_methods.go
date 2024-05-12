@@ -133,7 +133,7 @@ func (s *Service) FetchRecent{{ .Resource.CamelcasePlural }}(ctx context.Context
 		return nil, 0, fmt.Errorf("failed to get recent {{ .Resource.CamelcasePlural }}: %w", err)
 	}
 
-	totalCount, err := s.dbx.CountRecent{{ .Resource.CamelcasePlural }}(ctx)
+  totalCount, err := s.dbx.CountRecent{{ .Resource.CamelcasePlural }}(ctx{{if ne .Parent nil}}, parentID{{end}})
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch {{ .Resource.CamelcasePlural }} count: %w", err)
 	}

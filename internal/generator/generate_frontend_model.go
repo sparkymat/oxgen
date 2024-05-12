@@ -11,6 +11,9 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 
 dayjs.extend(utc);
+{{range $f := .Fields}}{{ if eq $f.Type "enum" }}
+{{ $f.EnumTypesFrontendModel }}
+{{end}}{{end}}
 
 export class {{  .Resource.CamelcaseSingular }} {
   public id: string;

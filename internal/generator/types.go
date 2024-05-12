@@ -192,6 +192,8 @@ func (f InputField) PresenterGoType() string {
 	switch f.Type {
 	case FieldTypeString:
 		return "string"
+	case FieldTypeEnum:
+		return "string"
 	case FieldTypeInt:
 		return "int32"
 	case FieldTypeBool:
@@ -314,18 +316,24 @@ func (f InputField) UpdateGoFunctionSignatureParam() string {
 }
 
 func (f InputField) PresenterAssignment() string {
-	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp || f.Type == FieldTypeReferences {
-		str := "if m." + f.Name.CamelcaseSingular() + ".Valid {\n"
+	dbxField := f.Name.CamelcaseSingular()
 
-		str += "v := m." + f.Name.CamelcaseSingular() + ".Time"
+	if strings.HasSuffix(dbxField, "Id") {
+		dbxField = dbxField[:len(dbxField)-2] + "ID"
+	}
+
+	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp || f.Type == FieldTypeReferences {
+		str := "if m." + dbxField + ".Valid {\n"
+
+		str += "v := m." + dbxField
 
 		switch f.Type {
 		case FieldTypeReferences:
-			str += ".String()"
+			str += ".UUID.String()"
 		case FieldTypeDate:
-			str += ".Format(\"2006-01-02\")"
+			str += ".Time.Format(\"2006-01-02\")"
 		case FieldTypeTimestamp:
-			str += ".Format(time.RFC3339)"
+			str += ".Time.Format(time.RFC3339)"
 		case FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
 		default:
 		}
@@ -350,15 +358,23 @@ func (f InputField) PresenterAssignment() string {
 		str += "&"
 	}
 
+	if f.Type == FieldTypeEnum {
+		str += "string("
+	}
+
 	str += ("m." + f.Name.CamelcaseSingular())
 	if !f.NotNull {
 		str += ("." + f.PgType())
 	}
 
+	if f.Type == FieldTypeEnum {
+		str += ")"
+	}
+
 	str += "\n"
 
 	if !f.NotNull {
-		str += "\n}\n\n"
+		str += "}\n"
 	}
 
 	return str
@@ -368,6 +384,8 @@ func (f InputField) PgType() string {
 	switch f.Type {
 	case FieldTypeString:
 		return "String"
+	case FieldTypeEnum:
+		return f.Resource.CamelcaseSingular() + f.Name.CamelcaseSingular()
 	case FieldTypeAttachment:
 		return "String"
 	case FieldTypeInt:
@@ -425,10 +443,12 @@ func (f InputField) PgValue() string {
 	}
 }
 
-func (f FieldType) TypescriptType() string {
-	switch f {
+func (f InputField) TypescriptType() string {
+	switch f.Type {
 	case FieldTypeString:
 		return "string"
+	case FieldTypeEnum:
+		return f.Name.CamelcaseSingular()
 	case FieldTypeInt:
 		return "number"
 	case FieldTypeBool:
@@ -450,6 +470,16 @@ func (f FieldType) TypescriptType() string {
 	}
 }
 
+func (f InputField) EnumTypesFrontendModel() string {
+	if f.Type != FieldTypeEnum {
+		return ""
+	}
+
+	typeStrings := lo.Map(f.EnumValues, func(s string, _ int) string { return "'" + s + "'" })
+
+	return "export type " + f.Name.CamelcaseSingular() + " = " + strings.Join(typeStrings, " | ")
+}
+
 func (f InputField) FrontendModelDeclaration() string {
 	return "public " + f.FrontendInterfaceDeclaration()
 }
@@ -461,7 +491,7 @@ func (f InputField) FrontendInterfaceDeclaration() string {
 		str += "?"
 	}
 
-	str += ": " + f.Type.TypescriptType() + ";"
+	str += ": " + f.TypescriptType() + ";"
 
 	return str
 }

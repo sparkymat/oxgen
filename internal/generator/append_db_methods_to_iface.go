@@ -8,8 +8,8 @@ import (
 )
 
 const dbMethodsTemplate = `
-  CountRecent{{ .Resource.CamelcasePlural }}(ctx context.Context) (int64, error) 
-  {{if .HasSearch}}CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, query string) (int64, error) 
+  CountRecent{{ .Resource.CamelcasePlural }}(ctx context.Context{{if ne .Parent nil}}, parentID uuid.UUID{{end}}) (int64, error) 
+  {{if .HasSearch}}CountSearched{{ .Resource.CamelcasePlural }}(ctx context.Context, {{if eq .Parent nil}}query string{{else}}params dbx.CountSearched{{ .Resource.CamelcasePlural }}Params{{end}}) (int64, error) 
   {{end}}Create{{ .Resource.CamelcaseSingular }}(ctx context.Context, params dbx.Create{{ .Resource.CamelcaseSingular }}Params) (dbx.{{ .Resource.CamelcaseSingular }}, error)
   Delete{{ .Resource.CamelcaseSingular }}(ctx context.Context, id uuid.UUID) error 
   Fetch{{ .Resource.CamelcaseSingular }}ByID(ctx context.Context, id uuid.UUID) (dbx.{{ .Resource.CamelcaseSingular }}, error) 

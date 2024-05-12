@@ -314,7 +314,7 @@ func (f InputField) UpdateGoFunctionSignatureParam() string {
 }
 
 func (f InputField) PresenterAssignment() string {
-	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp || f.Type == FieldTypeReferences {
 		str := "if m." + f.Name.CamelcaseSingular() + ".Valid {\n"
 
 		str += "v := m." + f.Name.CamelcaseSingular() + ".Time"
@@ -379,7 +379,7 @@ func (f InputField) PgType() string {
 	case FieldTypeDate:
 		return "Time"
 	case FieldTypeUUID, FieldTypeReferences:
-		return "uuid.UUID"
+		return "UUID"
 	case FieldTypeUnknown:
 		return "unknown"
 	default:

@@ -315,6 +315,7 @@ func (f InputField) UpdateGoFunctionSignatureParam() string {
 	return paramString
 }
 
+//nolint:funlen
 func (f InputField) PresenterAssignment() string {
 	dbxField := f.Name.CamelcaseSingular()
 
@@ -333,18 +334,28 @@ func (f InputField) PresenterAssignment() string {
 
 		switch f.Type {
 		case FieldTypeReferences:
-			str += ".UUID.String()"
+			if !f.NotNull {
+				str += ".UUID"
+			}
+
+			str += ".String()"
 		case FieldTypeDate:
 			str += ".Time.Format(\"2006-01-02\")"
 		case FieldTypeTimestamp:
 			str += ".Time.Format(time.RFC3339)"
-		case FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
+		case FieldTypeEnum, FieldTypeString, FieldTypeAttachment, FieldTypeUUID, FieldTypeInt, FieldTypeBool, FieldTypeUnknown:
 		default:
 		}
 
 		str += "\n"
 
-		str += "item." + f.Name.CamelcaseSingular() + " = &" + f.Name.LowerCamelcaseSingular() + "\n"
+		str += "item." + f.Name.CamelcaseSingular() + " = "
+
+		if !f.NotNull {
+			str += "&"
+		}
+
+		str += (f.Name.LowerCamelcaseSingular() + "\n")
 
 		if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
 			str += "}\n"
@@ -385,6 +396,8 @@ func (f InputField) PresenterAssignment() string {
 	if !f.NotNull {
 		str += "}\n"
 	}
+
+	str += "\n"
 
 	return str
 }

@@ -323,9 +323,13 @@ func (f InputField) PresenterAssignment() string {
 	}
 
 	if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp || f.Type == FieldTypeReferences {
-		str := "if m." + dbxField + ".Valid {\n"
+		str := ""
 
-		str += "v := m." + dbxField
+		if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+			str += "if m." + dbxField + ".Valid {\n"
+		}
+
+		str += (f.Name.LowerCamelcaseSingular() + " := m." + dbxField)
 
 		switch f.Type {
 		case FieldTypeReferences:
@@ -340,8 +344,13 @@ func (f InputField) PresenterAssignment() string {
 
 		str += "\n"
 
-		str += "item." + f.Name.CamelcaseSingular() + " = &v\n"
-		str += "}\n\n"
+		str += "item." + f.Name.CamelcaseSingular() + " = &" + f.Name.LowerCamelcaseSingular() + "\n"
+
+		if f.Type == FieldTypeDate || f.Type == FieldTypeTimestamp {
+			str += "}\n"
+		}
+
+		str += "\n"
 
 		return str
 	}
